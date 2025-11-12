@@ -1,0 +1,930 @@
+body {
+    font-family: Arial, sans-serif;
+    padding-top: 60px;
+    margin: 20px;
+    display: flex;
+    height: 100vh;
+    gap: 40px; /* 👈 adds more space between left and right containers */
+}
+
+.taskbar {
+    display: flex;
+    margin-top: 15px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    position: fixed;
+    top: 0;
+    height: 30px;
+    z-index: 1000;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 55%;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    gap: 20px;
+    transition: all 0.3s ease;
+}
+
+.taskbar:hover {
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.task-button {
+    background: transparent;
+    border: none;
+    color: black;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 12px 18px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+/* For the menu (toggle) button */
+.toggle-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 18px;
+}
+
+.toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: rotate(10deg);
+}
+
+
+.task-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.task-button.active {
+    background: linear-gradient(135deg, #4f9cff, #6ae3ff);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(79, 156, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.task-button .underline {
+    text-decoration: none;
+    transition: text-decoration 0.3s ease;
+}
+
+.task-button:hover .underline {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+/* Dropdown menu container */
+.dropdown-menu {
+    position: absolute;
+    top: 60px; /* just below the taskbar */
+    left: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    display: none;
+    flex-direction: column;
+    min-width: 160px;
+    padding: 8px 0;
+    z-index: 999;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Dropdown item */
+.dropdown-item {
+    background: transparent;
+    border: none;
+    color: black;
+    text-align: left;
+    padding: 10px 15px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+/* Icons inside dropdown */
+.dropdown-item i {
+    font-size: 16px;
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+/* Hover effect */
+.dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateX(3px);
+}
+
+/* Hover effect for icons */
+.dropdown-item:hover i {
+    color: #007BFF;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* --- Modal overlay --- */
+.print-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    display: none; /* hidden by default */
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+/* --- Modal box --- */
+.print-modal-content {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    padding: 25px;
+    width: 70%;
+    max-width: 900px;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: fadeIn 0.3s ease;
+}
+
+/* --- Modal header --- */
+.print-modal-content h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* --- Settings grid --- */
+.print-settings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.setting-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.setting-group label {
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.print-inputs {
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 13px;
+}
+
+.page-filter {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* --- Preview section --- */
+.print-preview-area {
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+#printPreview {
+    overflow-x: auto;
+}
+
+/* --- Buttons --- */
+.print-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.print-btn {
+    background: linear-gradient(135deg, #4f9cff, #6ae3ff);
+    border: none;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.print-btn:hover {
+    background: linear-gradient(135deg, #3c89f5, #59d8f0);
+    transform: translateY(-2px);
+}
+
+.cancel-btn {
+    background: #ddd;
+    color: #333;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.cancel-btn:hover {
+    background: #bbb;
+}
+
+/* --- Animation --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+.left-container, .right-container {
+    margin-top: 30px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    height: 650px;
+
+}
+
+.left-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    height:1100px;
+    margin-right:30px;
+}
+.headerGraph {
+    display: flex;
+    justify-content: center; /* space out items */
+    align-items: center;             /* vertically center items */
+    padding: 8px 12px;              /* optional padding */
+    margin-top:10px;
+    margin-bottom:10px;
+}
+.right-container {
+    background-color: #fcfdff;
+    border-radius: 8px;
+    width: 1300px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-left: 30px; /* 👈 pushes it more to the right */
+}
+
+.chart-container {
+    width: 100%;
+    max-width:310px;
+    height: 270px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px 0; /* Increased space between form and chart */
+}
+
+.form-container {
+    background-color: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ccc;
+}
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.form-group {
+    flex: 1;
+    margin-right: 5px;
+}
+
+.form-group:last-child {
+    margin-right: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 10px;
+}
+
+.form-group input,
+.form-group select {
+    width: 80%; /* Reduced width of inputs */
+    padding: 4px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 10px;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.form-buttons button {
+    padding: 4px;
+    width: 65px;
+    height: 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #007BFF;
+    box-shadow: 0 4px 8px gray;
+    color: white;
+    font-size: 10px;
+}
+
+.form-buttons button:hover {
+    background-color: #0056b3;
+}
+
+.form-container h2 {
+    text-align: center;
+    font-size: 12px;
+    margin-top: 3px;
+    margin-bottom: 8px;
+}
+.search-container {
+    display: flex;
+    justify-content: center;  /* 👈 centers horizontally */
+    align-items: center;      /* 👈 centers vertically */
+    gap: 10px;
+    width: 100%;              /* ensures it spans full width */
+    margin-top: 10px;         /* optional spacing */
+    height:16px;
+}
+
+
+.search-input {
+    width: 220px;
+    padding: 8px 5px;
+    border: none;
+    border-bottom: 2px solid #444;
+    background: transparent;
+    color: #222;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+    color: #888;
+}
+
+.search-input:focus {
+    border-bottom: 2px solid #000;
+    outline: none;
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.search-btn {
+    background: linear-gradient(145deg, #333, #111);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.search-btn:hover {
+    background: linear-gradient(145deg, #555, #222);
+    transform: translateY(-2px);
+}
+
+.search-btn:active {
+    background: #000;
+    transform: translateY(0);
+}
+/* General table styling */
+table {
+    border-collapse: separate; /* allows rounded corners */
+    border-spacing: 0;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* smooth edges */
+    overflow: hidden; /* ensures corners stay rounded */
+}
+
+/* Cell styling for table headers and data */
+th,
+td {
+    border: 1px solid gray;
+    padding: 8px;
+    text-align: left;
+    position: relative;
+}
+
+/* Header styling for the table */
+th {
+    background-color: rgba(211, 211, 211, 0.6);
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* Smooth corners on the header */
+th:first-child {
+    border-top-left-radius: 8px;
+}
+th:last-child {
+    border-top-right-radius: 8px;
+}
+
+/* Optional: alternate row coloring for better visibility */
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+/* Resizer for resizing columns */
+.resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 1;
+}
+.import-status {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    margin: 10px auto;
+    width: 80%;
+    text-align: center;
+}
+
+.status-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.status-box.info {
+    background: #e8f1ff;
+    color: #084298;
+}
+
+.status-box.loading {
+    background: #e8f1ff;
+    color: #0d6efd;
+}
+
+.status-box.success {
+    background: #e8ffe8;
+    color: #2e7d32;
+}
+
+.status-box.error {
+    background: #ffe8e8;
+    color: #c62828;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(-5px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+/* ===== Table Hover Effects ===== */
+.table-container table {
+    border-collapse: collapse;
+    width: 100%;
+    cursor: default;
+}
+
+.table-container table td,
+.table-container table th {
+    padding: 8px;
+    border: 1px solid #ccc;
+    transition: background-color 0.2s ease;
+}
+
+/* Hover entire row */
+.table-container table tr:hover {
+    background-color: #f2f2f2;
+}
+
+/* Hover column highlight */
+.table-container table td:hover,
+.table-container table th:hover {
+    background-color: #e0e0e0;
+}
+/* ===== Custom Context Menu ===== */
+.context-menu {
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border-radius: 6px;
+    padding: 5px 0;
+    display: none;
+    list-style: none;
+    z-index: 1000;
+    min-width: 180px;
+}
+
+.context-menu li {
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    white-space: nowrap;
+}
+
+.context-menu li:hover {
+    background-color: #f0f0f0;
+}
+
+.context-menu .submenu {
+    position: relative;
+}
+
+.context-menu .submenu-list {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+    border-radius: 6px;
+    list-style: none;
+    padding: 5px 0;
+}
+
+.context-menu .submenu:hover .submenu-list {
+    display: block;
+}
+.table-container td:focus {
+    outline: 2px solid #0078d7;
+    background-color: #eef6ff;
+}
+/* === Selection Styles === */
+td.selected {
+    background-color: #cce5ff !important;
+    outline: 2px solid #3399ff;
+}
+
+th.selected {
+    background-color: #99ccff !important;
+    outline: 2px solid #007bff;
+}
+
+tr.selected-row td {
+    background-color: #d9f2ff !important;
+}
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    justify-content: center; align-items: center;
+}
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 300px;
+    text-align: center;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: #333;
+}
+.modal-content p {
+    margin: 6px 0;
+}
+/* 💡 Formula Context Menu Styling */
+.custom-context-menu {
+    display: none;
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    z-index: 9999;
+    font-family: Arial, sans-serif;
+    width: 220px;
+}
+
+.custom-context-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 5px 0;
+}
+
+.custom-context-menu li {
+    padding: 8px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s ease;
+}
+
+.custom-context-menu li:hover {
+    background: #f0f0f0;
+}
+
+/* 🧩 Formula Dialog */
+.formula-dialog {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.formula-dialog-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.formula-dialog-content h3 {
+    margin-top: 0;
+}
+
+.formula-dialog-content input,
+.formula-dialog-content textarea {
+    width: 100%;
+    margin: 8px 0 12px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.dialog-actions {
+    text-align: right;
+}
+
+.dialog-actions button {
+    margin-left: 10px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#saveFormulaBtn {
+    background: #007bff;
+    color: white;
+}
+
+#cancelFormulaBtn {
+    background: #999;
+    color: white;
+}
+
+.custom-context-menu {
+    display: none;
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    z-index: 9999;
+    width: 220px;
+}
+
+.custom-context-menu ul { list-style: none; margin: 0; padding: 5px 0; }
+.custom-context-menu li {
+    padding: 8px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s ease;
+}
+.custom-context-menu li:hover { background: #f0f0f0; }
+
+.formula-dialog {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.formula-dialog-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 420px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.formula-dialog-content input,
+.formula-dialog-content textarea {
+    width: 100%;
+    margin: 8px 0 12px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.test-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+#testFormulaBtn {
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #6c63ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#testResult {
+    margin-top: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.dialog-actions {
+    text-align: right;
+    margin-top: 10px;
+}
+
+.dialog-actions button {
+    margin-left: 10px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#saveFormulaBtn {
+    background: #007bff;
+    color: white;
+}
+#cancelFormulaBtn {
+    background: #999;
+    color: white;
+}
+
+/* Inline overrides requested */
+.chart-container {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    padding:8px;
+    height: 460px;
+    box-sizing:border-box;
+}
+#recalcBtn {
+    background:#3a86ff;
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:8px 14px;
+    cursor:pointer;
+}
+#expenditureChart {
+    width:100%;
+    height:420px;
+    max-width:760px;
+} /* Chart canvas area; container height 600 kept above */
+
+.chart-legend {
+    margin-top:6px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+    max-width:920px;
+}
+
+.legend-item {
+    display:flex;
+    align-items:center;
+    gap:8px; font-size:13px;
+    color:#333;
+    cursor:pointer;
+    user-select:none;
+    padding:4px 6px;
+    border-radius:6px;
+}
+
+.legend-dot {
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    display:inline-block;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.06) inset;
+}
+
+/* small context menu style */
+.context-menu {
+    position:absolute;
+    display:none;
+    z-index:1200;
+    background:#fff;
+    border:1px solid #ddd;
+    border-radius:6px;
+    padding:6px 0;
+    min-width:160px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.12);
+}
+
+.context-menu li {
+    list-style:none;
+    padding:8px 12px;
+    cursor:pointer;
+    white-space:nowrap;
+}
+.context-menu li:hover {
+    background:#f4f6fb;
+}
+/* formulas manager UI */
+#formulaManager {
+    position: fixed;
+    right: 14px;
+    top: 70px;
+    width: 320px;
+    max-height: 420px;
+    overflow:auto;
+    background:#fff;
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:8px;
+    z-index:1300;
+    display:none;
+    box-shadow:0 10px 30px rgba(0,0,0,0.12);
+}
+
+#formulaManager h4 {
+    margin:6px 0 8px 0;
+    font-size:15px;
+}
+
+.formula-item {
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    align-items:center;
+    padding:6px;
+    border-bottom:1px solid #f0f0f0;
+}
+
+.formula-item button {
+    background:#eee;
+    border:none;
+    padding:4px 8px;
+    border-radius:6px;
+    cursor:pointer;
+}

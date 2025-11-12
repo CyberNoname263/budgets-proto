@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings — Budgets App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="Settings.css">
+
+</head>
+
+<body>
+<main>
+    <h2><i class="fa-solid fa-gear"></i> Application Settings</h2>
+    <p class="small" style="text-align:center;">Adjust your system preferences, finance options, and accessibility.</p>
+
+    <!-- DISPLAY -->
+    <h3><i class="fa-solid fa-display"></i> Display</h3>
+    <div class="setting-block">
+        <label class="setting-label"><i class="fa-solid fa-magnifying-glass"></i> Zoom</label>
+        <p class="small">Adjust the interface scale for readability. Affects all pages.</p>
+        <div class="row">
+            <input id="zoomRange" type="range" min="0.7" max="1.3" step="0.05" value="1">
+            <div class="small" id="zoomValue">100%</div>
+        </div>
+    </div>
+
+    <!-- FINANCIAL SETTINGS -->
+    <h3><i class="fa-solid fa-hand-holding-dollar"></i> Financial Preferences</h3>
+    <div class="setting-block">
+        <label class="setting-label">Default Currency</label>
+        <select id="currencySelect">
+            <option value="USD">$ USD</option>
+            <option value="ZWL">$ ZWL</option>
+            <option value="ZAR">R ZAR</option>
+        </select>
+    </div>
+
+    <div class="setting-block">
+        <label class="setting-label">Fiscal Year Start</label>
+        <input id="fiscalYearStart" type="month" value="2025-01">
+        <p class="small">Defines the start month of the fiscal year for reporting.</p>
+    </div>
+
+    <div class="setting-block">
+        <label class="setting-label">Reporting Period</label>
+        <select id="reportingPeriod">
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="annually">Annually</option>
+        </select>
+    </div>
+
+    <div class="setting-block">
+        <label class="setting-label">Default Account Type</label>
+        <select id="defaultAccountType">
+            <option value="expense">Expense</option>
+            <option value="revenue">Revenue</option>
+            <option value="asset">Asset</option>
+            <option value="liability">Liability</option>
+        </select>
+    </div>
+
+    <div class="setting-block">
+        <label class="setting-label">Default Tax Rate (%)</label>
+        <input id="defaultTaxRate" type="number" min="0" max="100" step="0.5" value="15">
+    </div>
+
+    <div class="card">
+        <label>Multi-currency</label>
+        <div class="row">
+            <label><input id="multiCurrencyToggle" type="checkbox"> Enable</label>
+        </div>
+        <div class="small" style="margin-top:8px">When enabled, transactions can have different currencies and exchange rates will be applied.</div>
+    </div>
+
+    <div class="setting-block">
+        <label class="setting-label">Enable Audit Trail</label>
+        <label><input id="auditTrailToggle" type="checkbox" checked> Track financial change history</label>
+    </div>
+
+    <!-- DATA -->
+    <h3><i class="fa-solid fa-database"></i> Data & Performance</h3>
+    <div class="setting-block">
+        <label class="setting-label">Backup Frequency</label>
+        <select id="backupFrequency">
+            <option value="manual">Manual</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+        </select>
+    </div>
+
+    <!-- SECURITY -->
+    <h3><i class="fa-solid fa-lock"></i> Security & Privacy</h3>
+    <div class="setting-block">
+        <label class="setting-label">Data Encryption</label>
+        <label><input id="encryptionToggle" type="checkbox" checked> Enable encryption</label>
+    </div>
+
+    <!-- BEHAVIOR -->
+    <h3><i class="fa-solid fa-sliders"></i> App Behavior</h3>
+    <div class="setting-block">
+        <label class="setting-label">Startup Page</label>
+        <select id="startupPageSelect">
+            <option value="dashboard">Dashboard</option>
+            <option value="reports">Reports</option>
+            <option value="revenue">Revenue</option>
+            <option value="expenditure">Expenditure</option>
+        </select>
+    </div>
+
+    <!-- MAINTENANCE -->
+    <h3><i class="fa-solid fa-tools"></i> Maintenance</h3>
+    <div class="setting-block row">
+        <div style="flex:1">
+            <label class="setting-label">Safe Restore</label>
+            <p class="small">Reset settings to default values.</p>
+        </div>
+        <button class="btn ghost" id="safeRestoreBtn">Restore</button>
+    </div>
+
+    <div class="setting-block row">
+        <div style="flex:1">
+            <label class="setting-label">Check for Updates</label>
+            <p class="small">Check if a newer version is available.</p>
+        </div>
+        <button class="btn" id="checkUpdatesBtn"><i class="fa-solid fa-cloud-arrow-up"></i> Check</button>
+    </div>
+</main>
+
+<footer>
+    <button class="btn ghost" id="cancelSettingsBtn">Cancel</button>
+    <button class="btn" id="applySettingsBtn">Apply</button>
+    <button class="btn" id="okSettingsBtn">OK</button>
+</footer>
+
+<script>
+    // Load settings from localStorage
+    function loadSettings() {
+        const s = JSON.parse(localStorage.getItem('appSettings') || '{}');
+        for (let key in s) {
+            const el = document.getElementById(key);
+            if (el) {
+                if (el.type === 'checkbox') el.checked = s[key];
+                else el.value = s[key];
+            }
+        }
+        if (s.zoomRange) {
+            document.body.style.zoom = s.zoomRange;
+            document.getElementById('zoomRange').value = s.zoomRange;
+            document.getElementById('zoomValue').textContent = Math.round(s.zoomRange * 100) + '%';
+        }
+    }
+
+    // Save settings to localStorage
+    function saveSettings() {
+        const fields = document.querySelectorAll('input, select');
+        const data = {};
+        fields.forEach(el => data[el.id] = el.type === 'checkbox' ? el.checked : el.value);
+        localStorage.setItem('appSettings', JSON.stringify(data));
+        // Update global zoom for all pages
+        localStorage.setItem('zoomLevel', data.zoomRange || 1);
+    }
+
+    // Zoom Control
+    const zoomRange = document.getElementById('zoomRange');
+    const zoomValue = document.getElementById('zoomValue');
+    zoomRange.addEventListener('input', () => {
+        const z = zoomRange.value;
+        document.body.style.zoom = z;
+        zoomValue.textContent = Math.round(z * 100) + '%';
+        localStorage.setItem('zoomLevel', z);
+    });
+
+    // Button Handlers
+    document.getElementById('cancelSettingsBtn').addEventListener('click', () => window.close());
+    document.getElementById('okSettingsBtn').addEventListener('click', () => {
+        saveSettings();
+        alert('Settings saved successfully!');
+        window.close();
+    });
+    document.getElementById('applySettingsBtn').addEventListener('click', () => {
+        saveSettings();
+        alert('Settings applied.');
+    });
+    document.getElementById('safeRestoreBtn').addEventListener('click', () => {
+        if (confirm('Reset all settings to default?')) {
+            localStorage.removeItem('appSettings');
+            loadSettings();
+            alert('Settings restored.');
+        }
+    });
+    document.getElementById('checkUpdatesBtn').addEventListener('click', () => {
+        alert('No updates available.');
+    });
+    // Initial load
+    loadSettings();
+</script>
+</body>
+</html>

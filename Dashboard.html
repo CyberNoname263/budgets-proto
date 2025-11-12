@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dashboard — </title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        :root{
+            --bg:#f7fafc;
+            --card:#ffffff;
+            --muted:#6b7280;
+            --accent: #12a05b;
+            --accent-600:#059e96;
+            --text:#0f172a;
+            --shadow: 0 8px 30px rgba(2,6,23,0.06);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+        html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-size:14px}
+        .topbar{
+            display:flex;align-items:center;padding:12px 18px;border-bottom:1px solid #eef2ff;background:linear-gradient(0deg,#fff, #fff);
+            position:sticky;top:0;z-index:40;backdrop-filter: blur(2px);
+        }
+        .brand{font-weight:700;font-size:18px;color:var(--text);margin-right:18px}
+        .taskbar{display:flex;gap:8px;align-items:center}
+        .task-button{background:transparent;border:0;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:600}
+        .task-button:hover{background:#f0f9f9;color:var(--accent-600)}
+        .spacer{flex:1}
+        .container{padding:20px;max-width:1200px;margin:0 auto}
+        .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+        .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:var(--shadow);border:1px solid #eef2ff}
+        .card .top{display:flex;justify-content:space-between;align-items:center}
+        .card-icon{width:44px;height:44px;border-radius:10px;background:#f1f9f9;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--accent)}
+        .title{font-weight:700}
+        .desc{font-size:13px;color:var(--muted)}
+        .value{font-weight:800;font-size:18px}
+        .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+        .stat-mini{font-size:13px;color:var(--muted)}
+        footer{color:var(--muted);padding:12px 0;text-align:center}
+
+        /* profile & panels */
+        .profile-card{padding:16px;border-radius:10px;background:var(--card);box-shadow:var(--shadow)}
+        .small-muted{font-size:12px;color:var(--muted)}
+        .panel{padding:10px;border-radius:8px;background:#fff;box-shadow:0 6px 20px rgba(2,6,23,0.04)}
+        .rate-item{padding:8px 10px;border-radius:8px;background:#fff;border:1px solid #eef2ff;min-width:160px;text-align:center}
+        .overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.32);z-index:999}
+        .modal{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--card);padding:18px;border-radius:12px;box-shadow:var(--shadow);z-index:1000;max-width:94%;width:680px}
+        .modal h3{margin:0 0 8px}
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .btn{background:var(--accent);border:0;color:#fff;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600}
+        .btn.ghost{background:transparent;border:1px solid #e6eefc;color:var(--text)}
+        .users-list{max-height:320px;overflow:auto}
+        .monitor-table{width:100%;border-collapse:collapse}
+        .monitor-table th,.monitor-table td{padding:8px 6px;border-bottom:1px solid #f1f5f9;text-align:left;font-size:13px}
+        .badge{background:#ef4444;color:#fff;padding:3px 7px;border-radius:999px;font-size:12px}
+        @media (max-width:720px){ .taskbar{display:none} .modal{width:94%} .grid-2{grid-template-columns:1fr} }
+    </style>
+</head>
+<body>
+
+<header class="topbar" role="banner">
+    <div class="brand">Budgets App</div>
+
+    <nav class="taskbar" aria-label="Main taskbar">
+        <button class="task-button" id="chartsBtn"><i class="fa-solid fa-diagram-project"></i> Charts</button>
+        <button class="task-button" id="tariffBtn"><i class="fa-solid fa-scale-balanced"></i> Tariff</button>
+        <button class="task-button" id="compBtn"><i class="fa-solid fa-user-tie"></i> Compensation</button>
+        <button class="task-button" id="reportsBtn"><i class="fa-solid fa-chart-line"></i> Reports</button>
+        <button class="task-button" id="revenueBtn"><i class="fa-solid fa-coins"></i> Revenue</button>
+
+        <div style="position:relative">
+            <button class="task-button" id="expenditureBtn"><i class="fa-solid fa-wallet"></i> Expenditure <i class="fa-solid fa-caret-down chev"></i></button>
+            <div id="expenditureDropdown" style="display:none;position:absolute;left:0;top:44px;background:var(--card);border-radius:10px;padding:10px;box-shadow:var(--shadow);z-index:120">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    <button class="btn ghost" id="generalExpBtn">General Expenditure</button>
+                    <button class="btn ghost" id="capitalExpBtn">Capital Expenditure</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div style="display:flex;align-items:center;gap:12px">
+        <div class="panel" style="display:flex;gap:12px;align-items:center">
+            <label class="small-muted" for="currencySelect">Currency</label>
+            <select id="currencySelect" aria-label="Select currency" style="padding:6px 10px;border-radius:8px;border:1px solid #e6eefc">
+                <option value="USD">USD</option>
+                <option value="ZIG">ZIG</option>
+                <option value="ZAR">ZAR</option>
+            </select>
+
+            <div style="display:flex;gap:10px;align-items:center" id="ratesPanel">
+                <div class="rate-item" id="rateUSDZIG">USD → ZIG: —</div>
+                <div class="rate-item" id="rateUSDZAR">USD → ZAR: —</div>
+            </div>
+        </div>
+
+        <button class="task-button" id="settingsBtn"><i class="fa-solid fa-gear"></i> Settings</button>
+
+        <div style="display:flex;align-items:center;gap:12px">
+            <div style="position:relative">
+                <button class="task-button" id="notifyBtn"><i class="fa-solid fa-bell"></i></button>
+                <span id="notifyBadge" class="badge" style="display:none;position:absolute;top:-6px;right:-6px">0</span>
+            </div>
+
+            <div style="position:relative">
+                <button class="task-button" id="userMenuBtn"><i class="fa-solid fa-user"></i> <span id="displayUser">Guest</span> <i class="fa-solid fa-caret-down chev"></i></button>
+
+                <div id="userMenu" style="display:none;position:absolute;right:0;top:44px;background:var(--card);border-radius:10px;padding:10px;box-shadow:var(--shadow);z-index:120;width:320px">
+                    <div style="padding:6px 8px;border-bottom:1px solid #eef2ff">
+                        <div style="font-weight:800" id="menuUserName">Guest</div>
+                        <div class="small-muted" id="menuUserType">Visitor</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px;padding-top:10px">
+                        <button class="btn ghost" id="openProfile"><i class="fa-solid fa-id-card-clip"></i> User Profile</button>
+                        <button class="btn ghost" id="openAddUserBtn" style="display:none"><i class="fa-solid fa-user-plus"></i> Add User</button>
+                        <button class="btn ghost" id="openManageUsersBtn" style="display:none"><i class="fa-solid fa-users"></i> Manage Users</button>
+                        <button class="btn ghost" id="openMonitorBtn" style="display:none"><i class="fa-solid fa-eye"></i> System Monitor</button>
+                        <button class="btn ghost" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container" role="main">
+    <h2 style="margin:10px 0 18px">Overview</h2>
+
+    <div class="cards" id="overviewCards">
+        <div class="card">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-coins"></i></div>
+                    <div><div class="title">Total Revenue</div><div class="desc">All recorded revenue</div></div>
+                </div>
+                <div class="value" id="totalRevenue">$0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini" id="revCount">Classes: 0</div>
+                <div><button class="btn ghost" id="viewRevenue">View</button></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                    <div><div class="title">General Expenditure</div><div class="desc">Recurrent spend</div></div>
+                </div>
+                <div class="value" id="totalGenExp">$0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini" id="genExpCount">Rows: 0</div>
+                <div><button class="btn ghost" id="viewGenExp">View</button></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-building-columns"></i></div>
+                    <div><div class="title">Capital Expenditure</div><div class="desc">Projects & assets</div></div>
+                </div>
+                <div class="value" id="totalCapExp">$0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini" id="capExpCount">Items: 0</div>
+                <div><button class="btn ghost" id="viewCapExp">View</button></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-user-tie"></i></div>
+                    <div><div class="title">Compensation</div><div class="desc">Salaries & benefits</div></div>
+                </div>
+                <div class="value" id="totalComp">$0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini" id="compCount">Records: 0</div>
+                <div><button class="btn ghost" id="viewComp">View</button></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div><div class="title">Tariff Schedule</div><div class="desc">Active items</div></div>
+                </div>
+                <div class="value" id="totalTariff">0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini">Last update: <span id="tariffUpdated">—</span></div>
+                <div><button class="btn ghost" id="viewTariff">View</button></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-file-chart-column"></i></div>
+                    <div><div class="title">Reports</div><div class="desc">Forecasts</div></div>
+                </div>
+                <div class="value" id="totalDeficit">$0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini">Forecast: <span id="forecastPct">—</span></div>
+                <div><button class="btn ghost" id="viewReports">View</button></div>
+            </div>
+        </div>
+    </div>
+
+    <section class="card" style="margin-top:14px">
+        <h3 style="margin:0 0 8px">Recent activity</h3>
+        <div id="activityList" style="max-height:240px;overflow:auto;padding-top:8px"></div>
+    </section>
+
+    <footer style="margin-top:12px">Light theme • Budgets App — Dashboard</footer>
+</main>
+
+<div class="overlay" id="overlay"></div>
+
+<!-- Notifications -->
+<div class="modal" id="notificationsModal" role="dialog" aria-modal="true" style="max-width:520px">
+    <h3>Notifications</h3>
+    <div id="notiList" style="max-height:300px;overflow:auto;margin-top:8px"></div>
+    <div style="text-align:right;margin-top:12px">
+        <button class="btn ghost" id="clearNotificationsBtn">Clear</button>
+        <button class="btn" id="closeNotificationsBtn">Close</button>
+    </div>
+</div>
+
+<!-- Add User -->
+<div class="modal" id="addUserModal" role="dialog" aria-modal="true" style="max-width:520px">
+    <h3>Add New User</h3>
+    <div class="grid-2" style="margin-top:10px">
+        <div><label>Username</label><input id="newUsername" type="text"/></div>
+        <div><label>Email</label><input id="newEmail" type="text"/></div>
+        <div><label>Password</label><input id="newPassword" type="password"/></div>
+        <div><label>Type</label><select id="newUserType"><option>Agent</option><option>Admin</option></select></div>
+        <div style="grid-column:1/-1"><label>Security question (optional)</label><input id="securityQuestion1" placeholder="e.g., Mother's maiden name"/></div>
+    </div>
+    <div style="margin-top:12px;text-align:right">
+        <button class="btn" id="createUserBtn">Create</button>
+        <button class="btn ghost" id="cancelCreateUserBtn">Cancel</button>
+    </div>
+</div>
+
+<!-- Manage Users -->
+<div class="modal" id="manageUsersModal" role="dialog" aria-modal="true" style="max-width:760px">
+    <h3>Manage Users</h3>
+    <div class="users-list" id="usersList" style="max-height:320px;overflow:auto;padding-top:8px"></div>
+    <div style="margin-top:12px;text-align:right">
+        <button class="btn ghost" id="closeManageUsersBtn">Close</button>
+    </div>
+</div>
+
+<!-- Profile -->
+<div class="modal" id="profileModal" role="dialog" aria-modal="true" style="max-width:480px">
+    <h3>User Profile</h3>
+    <div class="profile-card" style="margin-top:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:800" id="profileName">Dylan</div><div class="small-muted" id="profileType">Admin</div></div>
+            <div class="small-muted" id="profileLoginAt">Logged in: —</div>
+        </div>
+        <div style="margin-top:12px">
+            <label>Email</label><div class="small-muted" id="profileEmailDisplay">—</div>
+            <label style="margin-top:8px">Security question</label><div class="small-muted" id="profileSecurityDisplay">—</div>
+        </div>
+        <div style="text-align:right;margin-top:12px"><button class="btn" id="closeProfileBtn">Close</button></div>
+    </div>
+</div>
+
+<!-- Monitor -->
+<div class="modal" id="monitorModal" role="dialog" aria-modal="true" style="max-width:900px">
+    <h3>System Monitor — Activity Logs</h3>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <label class="small-muted">Filter user</label>
+        <select id="monitorUserFilter"><option value="*">All users</option></select>
+        <label class="small-muted">Search</label>
+        <input id="monitorSearch" placeholder="Search actions..." />
+        <div style="flex:1"></div>
+        <button class="btn ghost" id="exportLogsBtn"><i class="fa-solid fa-file-export"></i> Export</button>
+        <button class="btn ghost" id="clearLogsBtn">Clear</button>
+    </div>
+
+    <div style="max-height:420px;overflow:auto;margin-top:12px">
+        <table class="monitor-table" id="monitorTable" aria-live="polite">
+            <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Meta</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div style="text-align:right;margin-top:12px"><button class="btn" id="closeMonitorBtn">Close</button></div>
+</div>
+
+<script>
+    // Keys
+    const USERS_KEY = 'appUsers_v1';
+    const SESSION_KEY = 'loggedInUser';
+    const SESSION_BACKUP_KEY = 'loggedInUser_backup';
+    const NOTI_KEY = 'appNotifications_v1';
+    const ACTIVITY_KEY = 'userActivityLogs_v1';
+    const CURRENCY_KEY = 'dashboardCurrency_v1';
+
+    // Safe JSON parse
+    function safeParse(s){ try{ return JSON.parse(s); }catch(e){ return null; } }
+
+    // Ensure default users exist
+    (function ensureDefaults(){
+        try{
+            const raw = localStorage.getItem(USERS_KEY);
+            if(!raw){
+                const users = [
+                    { username: 'Dylan', password: '2004Tman', email: 'tawandadylan2004@gmail.com', type: 'Admin' },
+                    { username: 'Agent1', password: 'agentpwd', email: 'agent1@example.com', type: 'Agent' }
+                ];
+                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            }
+        }catch(e){ console.error(e); }
+    })();
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+        logActivity('Opened settings'); // Log activity
+        window.location.href = 'Settings.html'; // Navigate to settings page
+    });
+
+    function getUsers(){ return safeParse(localStorage.getItem(USERS_KEY)) || []; }
+    function setUsers(list){ localStorage.setItem(USERS_KEY, JSON.stringify(list)); }
+
+    function loadNotifications(){ return safeParse(localStorage.getItem(NOTI_KEY)) || []; }
+    function saveNotifications(list){ localStorage.setItem(NOTI_KEY, JSON.stringify(list)); }
+
+    function loadActivity(){ return safeParse(localStorage.getItem(ACTIVITY_KEY)) || []; }
+    function saveActivity(list){ localStorage.setItem(ACTIVITY_KEY, JSON.stringify(list)); }
+
+    function getCurrentUser(){
+        // prefer sessionStorage; if missing, try backup and restore into sessionStorage
+        let cur = safeParse(sessionStorage.getItem(SESSION_KEY));
+        if(!cur){
+            const backup = safeParse(localStorage.getItem(SESSION_BACKUP_KEY));
+            if(backup){
+                try{ sessionStorage.setItem(SESSION_KEY, JSON.stringify(backup)); }catch(e){}
+                cur = backup;
+            }
+        }
+        return cur;
+    }
+    function setCurrentUser(u){
+        try{ sessionStorage.setItem(SESSION_KEY, JSON.stringify(u)); }catch(e){}
+        try{ localStorage.setItem(SESSION_BACKUP_KEY, JSON.stringify(u)); }catch(e){}
+        updateUserUI();
+    }
+
+    function logActivity(action, meta = {}){
+        try{
+            const cur = getCurrentUser();
+            const list = loadActivity();
+            list.push({ id: 'a_'+Math.random().toString(36).slice(2,9), ts: new Date().toISOString(), user: cur ? cur.username : (meta.username||'Guest'), action, meta });
+            saveActivity(list);
+            renderRecentActivity();
+        }catch(e){ console.error('logActivity', e); }
+    }
+
+    // Notifications helper
+    window.AppNotifications = { push: (title, body) => {
+            const list = loadNotifications(); list.push({ id:'n_'+Math.random().toString(36).slice(2,9), title, body, ts:new Date().toISOString(), read:false });
+            saveNotifications(list); renderNotificationBadge();
+        }};
+
+    function renderNotificationBadge(){
+        const list = loadNotifications();
+        const unread = list.filter(n => !n.read).length;
+        const badge = document.getElementById('notifyBadge');
+        if(unread>0){ badge.style.display='inline-block'; badge.textContent = unread; } else badge.style.display='none';
+    }
+
+    function renderNotifications(){
+        const el = document.getElementById('notiList'); el.innerHTML='';
+        const list = loadNotifications().slice().reverse();
+        if(!list.length){ el.innerHTML = '<div class="small-muted">No notifications</div>'; return; }
+        list.forEach(n=>{
+            const d = document.createElement('div'); d.style.padding='8px'; d.style.borderBottom='1px solid #eef2ff';
+            d.innerHTML = `<div style="font-weight:700">${escapeHtml(n.title)}</div><div class="small-muted" style="margin-top:6px">${escapeHtml(n.body)}</div><div class="small-muted" style="margin-top:6px">${new Date(n.ts).toLocaleString()}</div>`;
+            el.appendChild(d);
+        });
+    }
+
+    function escapeHtml(s){ return String(s||'').replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m])); }
+
+    // UI & role control
+    function updateUserUI(){
+        const u = getCurrentUser();
+        document.getElementById('displayUser').textContent = u ? u.username : 'Guest';
+        document.getElementById('menuUserName').textContent = u ? u.username : 'Guest';
+        document.getElementById('menuUserType').textContent = u ? (u.type || 'Agent') : 'Visitor';
+        document.getElementById('profileName').textContent = u ? u.username : 'Guest';
+        document.getElementById('profileType').textContent = u ? (u.type || 'Agent') : 'Visitor';
+        document.getElementById('profileEmailDisplay').textContent = u ? (u.email || '—') : '—';
+        document.getElementById('profileLoginAt').textContent = u ? `Logged in: ${new Date(u.loggedAt || new Date().toISOString()).toLocaleString()}` : '—';
+
+        const isAdmin = u && u.type === 'Admin';
+        document.getElementById('openAddUserBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+        document.getElementById('openManageUsersBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+        document.getElementById('openMonitorBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+    }
+
+    // On load: validate session — if none, redirect to index.html
+    (function initSession(){
+        const cur = getCurrentUser();
+        if(!cur){
+            // no session — redirect to login (relative)
+            window.location.href = 'index.html';
+            return;
+        }
+        updateUserUI();
+        logActivity('Entered dashboard');
+    })();
+
+    // Taskbar nav (simple navigate)
+    function openAndClose(file){ logActivity(`Open page ${file}`); window.location.href = file; }
+
+    document.getElementById('chartsBtn').addEventListener('click', ()=> openAndClose('Charts Of Accounts.html'));
+    document.getElementById('tariffBtn').addEventListener('click', ()=> openAndClose('Tariff Schedule.html'));
+    document.getElementById('compBtn').addEventListener('click', ()=> openAndClose('Compensation of Employees.html'));
+    document.getElementById('reportsBtn').addEventListener('click', ()=> openAndClose('Reports.html'));
+    document.getElementById('revenueBtn').addEventListener('click', ()=> openAndClose('Revenue.html'));
+
+    // Expenditure dropdown
+    document.getElementById('expenditureBtn').addEventListener('click', ()=>{
+        const dd = document.getElementById('expenditureDropdown');
+        dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Profile modal
+    document.getElementById('openProfile').addEventListener('click', ()=>{
+        const u = getCurrentUser(); if(!u) return alert('No user logged in');
+        const sec = safeParse(localStorage.getItem(`security_${u.username}`)) || {};
+        document.getElementById('profileSecurityDisplay').textContent = sec.q || '—';
+        showModal('profileModal'); logActivity('Opened profile modal');
+    });
+    document.getElementById('closeProfileBtn').addEventListener('click', ()=> hideModal('profileModal'));
+
+    // Add user
+    document.getElementById('openAddUserBtn').addEventListener('click', ()=> { showModal('addUserModal'); });
+    document.getElementById('cancelCreateUserBtn').addEventListener('click', ()=> hideModal('addUserModal'));
+    document.getElementById('createUserBtn').addEventListener('click', ()=>{
+        const cur = getCurrentUser(); if(!cur || cur.type !== 'Admin'){ alert('Only Admins'); return; }
+        const username = (document.getElementById('newUsername').value || '').trim();
+        const email = (document.getElementById('newEmail').value || '').trim();
+        const pwd = (document.getElementById('newPassword').value || '');
+        const type = (document.getElementById('newUserType').value || 'Agent');
+        const secQ = (document.getElementById('securityQuestion1').value || '').trim();
+        if(!username || !pwd){ alert('Enter username and password'); return; }
+        const users = getUsers();
+        if(users.find(x=>x.username.toLowerCase()===username.toLowerCase())){ alert('User exists'); return; }
+        users.push({ username, email, password: pwd, type });
+        setUsers(users);
+        if(secQ) localStorage.setItem(`security_${username}`, JSON.stringify({ q: secQ }));
+        showToast('User created'); hideModal('addUserModal');
+        AppNotifications.push('New user added', `User ${username} created by ${cur.username}`); logActivity(`Added user ${username}`, { by: cur.username });
+        populateManageUsers();
+    });
+
+    // Manage users
+    function populateManageUsers(){
+        const users = getUsers();
+        const el = document.getElementById('usersList'); el.innerHTML='';
+        users.forEach((usr, idx)=>{
+            const row = document.createElement('div'); row.style='display:flex;align-items:center;justify-content:space-between;padding:8px;border-bottom:1px solid #f1f5f9';
+            row.innerHTML = `<div><strong>${escapeHtml(usr.username)}</strong> <div class="small-muted">${escapeHtml(usr.email||'')} • ${escapeHtml(usr.type||'Agent')}</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn ghost" data-idx="${idx}" data-action="view">View</button>
+          <button class="btn" data-idx="${idx}" data-action="delete">Delete</button>
+          <button class="btn ghost" data-idx="${idx}" data-action="showpwd">Show pwd</button>
+        </div>`;
+            el.appendChild(row);
+        });
+        el.querySelectorAll('button').forEach(b=>{
+            b.addEventListener('click', (ev)=>{
+                const i = Number(b.getAttribute('data-idx'));
+                const action = b.getAttribute('data-action');
+                const users = getUsers();
+                if(action === 'delete'){
+                    if(!confirm(`Delete user ${users[i].username}?`)) return;
+                    const removed = users.splice(i,1)[0];
+                    setUsers(users); populateManageUsers();
+                    AppNotifications.push('User removed', `${removed.username} was deleted`); logActivity(`Deleted user ${removed.username}`);
+                } else if(action === 'view'){
+                    alert(`Username: ${users[i].username}\nEmail: ${users[i].email}\nType: ${users[i].type}`);
+                } else if(action === 'showpwd'){
+                    alert(`Password for ${users[i].username}: ${users[i].password}`); logActivity(`Viewed password for ${users[i].username}`);
+                }
+            });
+        });
+    }
+
+    document.getElementById('openManageUsersBtn').addEventListener('click', ()=> { populateManageUsers(); showModal('manageUsersModal'); logActivity('Opened manage users'); });
+    document.getElementById('closeManageUsersBtn').addEventListener('click', ()=> hideModal('manageUsersModal'));
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', ()=>{
+        const cur = getCurrentUser();
+        if(cur){ logActivity('Logout'); }
+        try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
+        // keep backup but safe-erase if you prefer: localStorage.removeItem(SESSION_BACKUP_KEY);
+        window.location.href = 'index.html';
+    });
+
+    // Notifications wiring
+    document.getElementById('notifyBtn').addEventListener('click', ()=>{
+        showModal('notificationsModal'); renderNotifications();
+        const list = loadNotifications().map(n=>({...n, read:true})); saveNotifications(list); renderNotificationBadge(); logActivity('Opened notifications');
+    });
+    document.getElementById('closeNotificationsBtn').addEventListener('click', ()=> hideModal('notificationsModal'));
+    document.getElementById('clearNotificationsBtn').addEventListener('click', ()=> { if(!confirm('Clear all notifications?')) return; saveNotifications([]); renderNotifications(); renderNotificationBadge(); });
+
+    // Recent activity render
+    function renderRecentActivity(){
+        const cur = getCurrentUser();
+        const container = document.getElementById('activityList'); container.innerHTML='';
+        if(!cur){ container.innerHTML = '<div class="small-muted">No recent activity</div>'; return; }
+        const list = loadActivity().slice().reverse().filter(it => it.user === cur.username);
+        if(!list.length){ container.innerHTML = '<div class="small-muted">No recent activity</div>'; return; }
+        list.slice(0,60).forEach(it=>{
+            const d = document.createElement('div'); d.style.padding='8px'; d.style.borderBottom='1px solid #f1f5f9';
+            d.innerHTML = `<div style="font-size:13px">${escapeHtml(it.action)}</div><div class="small-muted" style="color:#9aa4b2">${new Date(it.ts).toLocaleString()}</div>`;
+            container.appendChild(d);
+        });
+    }
+
+    // Totals (currency-aware)
+    function numberFormat(n){ return (Math.round((n||0)*100)/100).toLocaleString(); }
+    function computeTotals(){
+        try{
+            const rev = safeParse(localStorage.getItem('revenueData_v3')) || [];
+            const gen = safeParse(localStorage.getItem('expenditureData_v1')) || [];
+            const cap = safeParse(localStorage.getItem('capitalExpenditureData_v1')) || [];
+            const comp = safeParse(localStorage.getItem('compensationData_v1')) || [];
+            const tariff = safeParse(localStorage.getItem('tariffData_v1')) || [];
+
+            const sumClasses = arr => (arr||[]).reduce((acc, cls) => acc + (Array.isArray(cls.items) ? cls.items.reduce((s,it)=> s + (Number(it.total)||0), 0) : 0), 0);
+            const revTotal = sumClasses(rev), genTotal = sumClasses(gen), capTotal = sumClasses(cap), compTotal = sumClasses(comp);
+
+            const currency = localStorage.getItem(CURRENCY_KEY) || 'USD';
+            const symbol = currency === 'USD' ? '$' : (currency === 'ZAR' ? 'R' : (currency === 'ZIG' ? 'Z$' : currency + ' '));
+            const conv = (amount) => {
+                if(!window.latestRates) return amount;
+                const c = currency === 'ZIG' ? 'ZWL' : currency;
+                const rate = window.latestRates[c] || 1;
+                return amount * rate;
+            };
+
+            document.getElementById('totalRevenue').textContent = symbol + numberFormat(conv(revTotal));
+            document.getElementById('totalGenExp').textContent = symbol + numberFormat(conv(genTotal));
+            document.getElementById('totalCapExp').textContent = symbol + numberFormat(conv(capTotal));
+            document.getElementById('totalComp').textContent = symbol + numberFormat(conv(compTotal));
+            document.getElementById('totalTariff').textContent = (tariff.length || 0);
+            document.getElementById('revCount').textContent = 'Classes: ' + (rev.length || 0);
+            document.getElementById('genExpCount').textContent = 'Rows: ' + (gen.reduce((c,g)=> c + (Array.isArray(g.items)?g.items.length:0),0));
+            document.getElementById('capExpCount').textContent = 'Items: ' + (cap.reduce((c,g)=> c + (Array.isArray(g.items)?g.items.length:0),0));
+            document.getElementById('compCount').textContent = 'Records: ' + (comp.reduce((c,g)=> c + (Array.isArray(g.items)?g.items.length:0),0));
+            const deficit = revTotal - (genTotal + capTotal + compTotal);
+            document.getElementById('totalDeficit').textContent = (deficit < 0 ? '- ' : '') + symbol + numberFormat(Math.abs(conv(deficit)));
+            document.getElementById('tariffUpdated').textContent = (localStorage.getItem('tariffUpdated') ? new Date(localStorage.getItem('tariffUpdated')).toLocaleString() : '—');
+        }catch(e){ console.error(e); }
+    }
+    function computeTotals() {
+        try {
+            const rev = safeParse(localStorage.getItem('revenueData_v3')) || [];
+            const gen = safeParse(localStorage.getItem('expenditureData_v1')) || [];
+            const cap = safeParse(localStorage.getItem('capitalExpenditureData_v1')) || [];
+            const comp = safeParse(localStorage.getItem('compensationData_v1')) || [];
+            const tariff = safeParse(localStorage.getItem('tariffData_v1')) || [];
+
+            const sumClasses = arr => (arr || []).reduce((acc, cls) => acc + (Array.isArray(cls.items) ? cls.items.reduce((s, it) => s + (Number(it.total) || 0), 0) : 0), 0);
+            const revTotal = sumClasses(rev), genTotal = sumClasses(gen), capTotal = sumClasses(cap), compTotal = sumClasses(comp);
+
+            const currency = localStorage.getItem(CURRENCY_KEY) || 'USD';
+            const symbol = currency === 'USD' ? '$' : (currency === 'ZAR' ? 'R' : (currency === 'ZIG' ? 'Z$' : currency + ' '));
+            const conv = (amount) => {
+                if (!window.latestRates) return amount;
+                const c = currency === 'ZIG' ? 'ZWL' : currency;
+                const rate = window.latestRates[c] || 1;
+                return amount * rate;
+            };
+
+            if (currency === 'ZAR') {
+                const usdToZarRate = window.latestRates['ZAR'];
+                document.getElementById('totalRevenue').textContent = symbol + numberFormat(revTotal * usdToZarRate);
+                document.getElementById('totalGenExp').textContent = symbol + numberFormat(genTotal * usdToZarRate);
+                document.getElementById('totalCapExp').textContent = symbol + numberFormat(capTotal * usdToZarRate);
+                document.getElementById('totalComp').textContent = symbol + numberFormat(compTotal * usdToZarRate);
+            } else {
+                document.getElementById('totalRevenue').textContent = symbol + numberFormat(conv(revTotal));
+                document.getElementById('totalGenExp').textContent = symbol + numberFormat(conv(genTotal));
+                document.getElementById('totalCapExp').textContent = symbol + numberFormat(conv(capTotal));
+                document.getElementById('totalComp').textContent = symbol + numberFormat(conv(compTotal));
+            }
+
+            // Other calculations remain unchanged
+            const deficit = revTotal - (genTotal + capTotal + compTotal);
+            document.getElementById('totalDeficit').textContent = (deficit < 0 ? '- ' : '') + symbol + numberFormat(Math.abs(conv(deficit)));
+            document.getElementById('tariffUpdated').textContent = (localStorage.getItem('tariffUpdated') ? new Date(localStorage.getItem('tariffUpdated')).toLocaleString() : '—');
+        } catch (e) { console.error(e); }
+    }
+
+    // Modal helpers
+    function showModal(id){ document.getElementById('overlay').style.display='block'; document.getElementById(id).style.display='block'; }
+    function hideModal(id){ document.getElementById('overlay').style.display='none'; document.getElementById(id).style.display='none'; }
+    document.getElementById('overlay').addEventListener('click', ()=>{ document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'; });
+
+    function showToast(msg){
+        const el = document.createElement('div'); el.style.cssText='position:fixed;right:20px;bottom:20px;background:#0f172a;color:#fff;padding:10px 12px;border-radius:8px;z-index:9999;box-shadow:0 10px 30px rgba(2,6,23,0.3);opacity:0;transform:translateY(12px);transition:all .28s';
+        el.textContent = msg; document.body.appendChild(el); requestAnimationFrame(()=>{ el.style.opacity=1; el.style.transform='translateY(0)'; });
+        setTimeout(()=>{ el.style.opacity=0; el.style.transform='translateY(12px)'; setTimeout(()=>el.remove(),300); }, 1500);
+    }
+
+    // System monitor
+    document.getElementById('openMonitorBtn').addEventListener('click', ()=> { populateMonitorUsers(); renderMonitorTable(); showModal('monitorModal'); logActivity('Opened system monitor'); });
+    document.getElementById('closeMonitorBtn').addEventListener('click', ()=> hideModal('monitorModal'));
+
+    function populateMonitorUsers(){
+        const sel = document.getElementById('monitorUserFilter'); sel.innerHTML = '<option value="*">All users</option>';
+        getUsers().map(u=>u.username).forEach(u => { const opt = document.createElement('option'); opt.value=u; opt.textContent=u; sel.appendChild(opt); });
+    }
+
+    function renderMonitorTable(){
+        const tbody = document.querySelector('#monitorTable tbody'); tbody.innerHTML='';
+        const logs = loadActivity().slice().reverse();
+        const userFilter = document.getElementById('monitorUserFilter').value;
+        const search = (document.getElementById('monitorSearch').value || '').toLowerCase();
+        logs.filter(l => (userFilter === '*' || l.user === userFilter) && (search === '' || (l.action + ' ' + JSON.stringify(l.meta || '')).toLowerCase().includes(search)))
+            .slice(0,1000).forEach(l=>{
+            const tr = document.createElement('tr'); const metaStr = l.meta && Object.keys(l.meta).length ? escapeHtml(JSON.stringify(l.meta)) : '';
+            tr.innerHTML = `<td>${new Date(l.ts).toLocaleString()}</td><td>${escapeHtml(l.user)}</td><td>${escapeHtml(l.action)}</td><td style="font-size:12px;color:#475569">${metaStr}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById('monitorUserFilter').addEventListener('change', renderMonitorTable);
+    document.getElementById('monitorSearch').addEventListener('input', renderMonitorTable);
+    document.getElementById('clearLogsBtn').addEventListener('click', ()=> { if(!confirm('Clear all activity logs?')) return; saveActivity([]); renderMonitorTable(); showToast('Logs cleared'); logActivity('Cleared activity logs'); });
+    document.getElementById('exportLogsBtn').addEventListener('click', ()=> { const data = loadActivity(); const blob = new Blob([JSON.stringify(data,null,2)], { type:'application/json' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='activity_logs.json'; a.click(); URL.revokeObjectURL(url); logActivity('Exported activity logs'); });
+
+    // Notifications modal handlers
+    document.getElementById('notifyBtn').addEventListener('click', ()=>{
+        showModal('notificationsModal'); renderNotifications();
+        const list = loadNotifications().map(n => ({...n,read:true})); saveNotifications(list); renderNotificationBadge(); logActivity('Opened notifications');
+    });
+    document.getElementById('closeNotificationsBtn').addEventListener('click', ()=> hideModal('notificationsModal'));
+    document.getElementById('clearNotificationsBtn').addEventListener('click', ()=> { if(!confirm('Clear all notifications?')) return; saveNotifications([]); renderNotifications(); renderNotificationBadge(); });
+
+    // Manage recent activity and totals initial
+    renderNotificationBadge(); computeTotals(); renderRecentActivity();
+    setInterval(()=>{ computeTotals(); renderNotificationBadge(); renderRecentActivity(); }, 900);
+
+    // Currency & live rates (exchangerate.host). Map ZIG -> ZWL
+    async function fetchRates(){
+        try{
+            const symbols = ['ZAR','ZWL'].join(',');
+            const resp = await fetch(`https://api.exchangerate.host/latest?base=USD&symbols=${symbols}`);
+            if(!resp.ok) throw new Error('Rate fetch failed');
+            const json = await resp.json();
+            const rates = json.rates || {};
+            // Save globally
+            window.latestRates = { ...rates, USD: 1 };
+            document.getElementById('rateUSDZIG').textContent = rates['ZWL'] ? `USD → ZIG: ${numberFormat(rates['ZWL'])} (ZWL)` : 'USD → ZIG: —';
+            document.getElementById('rateUSDZAR').textContent = rates['ZAR'] ? `USD → ZAR: ${numberFormat(rates['ZAR'])}` : 'USD → ZAR: —';
+            computeTotals();
+            logActivity('Fetched exchange rates', { provider: 'exchangerate.host' });
+        }catch(e){
+            console.error('fetchRates', e);
+            document.getElementById('rateUSDZIG').textContent = 'USD → ZIG: (unavailable)';
+            document.getElementById('rateUSDZAR').textContent = 'USD → ZAR: (unavailable)';
+        }
+    }
+
+    // Init currency selector & polling
+    (function initCurrency(){
+        const saved = localStorage.getItem(CURRENCY_KEY) || 'USD';
+        document.getElementById('currencySelect').value = saved;
+        document.getElementById('currencySelect').addEventListener('change', (e)=>{ localStorage.setItem(CURRENCY_KEY, e.target.value); computeTotals(); logActivity('Changed currency', { currency: e.target.value }); });
+        fetchRates(); setInterval(fetchRates, 60 * 1000);
+    })();
+
+    // user menu toggle/closes
+    document.getElementById('userMenuBtn').addEventListener('click', ()=> {
+        const m = document.getElementById('userMenu'); m.style.display = m.style.display === 'block' ? 'none' : 'block';
+    });
+    document.addEventListener('click', (e)=> {
+        const um = document.getElementById('userMenu'); if(!document.getElementById('userMenuBtn').contains(e.target) && (!um.contains || !um.contains(e.target))) um.style.display = 'none';
+    });
+
+    // small helpers
+    document.addEventListener('keydown', (e)=> { if(e.key === 'Escape'){ document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'; } });
+
+    // Expose helper
+    window.DashboardHelpers = { refresh: ()=> { computeTotals(); renderNotificationBadge(); renderRecentActivity(); } };
+
+    // Utility safeParse (exposed in page)
+    function safeParse(s){ try{ return JSON.parse(s); }catch(e){ return null; } }
+
+
+</script>
+
+</body>
+</html>

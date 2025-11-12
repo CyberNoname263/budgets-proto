@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Budgets App — Login</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="Dashboard.css">
+
+    <style>
+
+    </style>
+</head>
+<body>
+<div class="login-wrap">
+    <div class="card" role="main" aria-labelledby="welcomeTitle">
+        <h2 id="welcomeTitle">Welcome back!</h2>
+
+        <div class="input-box" role="group" aria-label="username">
+            <i class="fas fa-user"></i>
+            <input id="username" class="input" type="text" placeholder="Username" autocomplete="username" />
+        </div>
+
+        <div class="input-box" role="group" aria-label="password">
+            <i class="fas fa-lock"></i>
+            <input id="password" class="input" type="password" placeholder="Password" autocomplete="current-password" />
+        </div>
+
+        <div class="meta-row">
+            <a href="#" class="small" id="forgotLink">Forgot password?</a>
+            <div id="spinner" style="display:none">⏳</div>
+        </div>
+
+        <button id="loginBtn" class="btn" aria-label="Login"><i class="fas fa-sign-in-alt"></i> Login</button>
+        <div id="loginError" class="error" role="alert"></div>
+
+        <div class="footer-note">Not registered? Ask an Admin to add you.</div>
+    </div>
+</div>
+
+<script>
+    // Keys
+    const USERS_KEY = 'appUsers_v1';
+    const SESSION_KEY = 'loggedInUser'; // used by both pages
+    const SESSION_BACKUP_KEY = 'loggedInUser_backup';
+    const ACTIVITY_KEY = 'userActivityLogs_v1';
+
+    // Ensure default users exist
+    (function ensureDefaults(){
+        try{
+            const raw = localStorage.getItem(USERS_KEY);
+            if(!raw){
+                const users = [
+                    { username: 'Dylan', password: '2004Tman', email: 'tawandadylan2004@gmail.com', type: 'Admin' },
+                    { username: 'Agent1', password: 'agentpwd', email: 'agent1@example.com', type: 'Agent' }
+                ];
+                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            }
+        }catch(e){ console.error(e); }
+    })();
+
+    function loadUsers(){ try{ return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); }catch(e){return [];} }
+    function findUser(username){
+        return loadUsers().find(u => String(u.username||'').toLowerCase() === String(username||'').toLowerCase());
+    }
+
+    function logActivity(action, meta = {}){
+        try{
+            const cur = JSON.parse(sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_BACKUP_KEY) || 'null');
+            const user = cur ? cur.username : (meta.username || 'Guest');
+            const list = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
+            list.push({ id: 'a_'+Math.random().toString(36).slice(2,9), ts: new Date().toISOString(), user, action, meta });
+            localStorage.setItem(ACTIVITY_KEY, JSON.stringify(list));
+        }catch(e){/* ignore */}
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', onLogin);
+    document.addEventListener('keydown', (e)=> { if(e.key==='Enter') onLogin(); });
+
+    function onLogin(){
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const err = document.getElementById('loginError');
+        err.style.display = 'none';
+
+        if(!username || !password){ err.textContent = 'Enter username and password.'; err.style.display='block'; return; }
+
+        const user = findUser(username);
+        if(!user || user.password !== password){
+            err.textContent = 'Invalid username or password.'; err.style.display='block';
+            logActivity('Failed login attempt', { username });
+            return;
+        }
+
+        // Create session object
+        const sessionObj = { username: user.username, type: user.type || 'Agent', email: user.email || '', loggedAt: new Date().toISOString() };
+
+        // Save to sessionStorage and a localStorage backup (fixes local-file origin issues)
+        try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionObj)); } catch(e){ console.warn('sessionStorage set failed', e); }
+        try { localStorage.setItem(SESSION_BACKUP_KEY, JSON.stringify(sessionObj)); } catch(e){ console.warn('backup set failed', e); }
+
+        logActivity('Login', { username: user.username });
+
+        // show spinner then redirect using same-folder relative path; leave backup to recover if session lost
+        const spinner = document.getElementById('spinner');
+        spinner.style.display = 'inline';
+        setTimeout(()=> {
+            spinner.style.display = 'none';
+            // navigate: prefer same-folder relative path
+            // This works for both hosted or local file usage (relative navigation)
+            const dest = 'Dashboard.html';
+            window.location.href = dest;
+        }, 300);
+    }
+</script>
+</body>
+</html>

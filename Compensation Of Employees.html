@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Compensation of Employees</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        :root{
+            --bg:#f7f9fb;
+            --muted:#6b7280;
+            --accent:#2eb67d;
+            --accent-2:#0b6b3b;
+            --card:#ffffff;
+            --radius:12px;
+            --shadow:0 10px 30px rgba(10,30,20,0.06);
+            --header-h:56px;
+            font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+        }
+        *{box-sizing:border-box}
+        body{margin:0;background:var(--bg);color:#0f172a}
+        .wrap{max-width:1200px;margin:22px auto;padding:18px}
+        header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+        .brand{display:flex;gap:12px;align-items:center}
+        .logo{width:56px;height:56px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:var(--shadow)}
+        h1{margin:0;font-size:1.15rem}
+        .sub{color:var(--muted);font-size:.92rem}
+        .top-actions{display:flex;gap:8px;align-items:center}
+        button{background:#fff;border:1px solid #e6e7e8;padding:9px 12px;border-radius:10px;cursor:pointer;box-shadow:0 8px 24px rgba(11,107,59,0.03);font-weight:700}
+        button.primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:#fff;border:none}
+        .grid{display:grid;gap:12px}
+        .cols-3{grid-template-columns:repeat(3,1fr)}
+        .cols-2{grid-template-columns:repeat(2,1fr)}
+        .card{background:var(--card);border-radius:12px;padding:12px;border:1px solid #eef2f1;box-shadow:var(--shadow)}
+        .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+        input, select{padding:10px;border-radius:8px;border:1px solid #e6e7e8}
+        .form-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+        label.small{font-size:0.85rem;color:var(--muted);margin-bottom:6px;display:block}
+        .table-wrap{overflow:auto;border-radius:8px;border:1px solid #e6e7e8;background:#fff;margin-top:10px;max-height:42vh}
+        table{width:100%;border-collapse:collapse;min-width:900px}
+        th,td{padding:10px 12px;border-bottom:1px solid #f1f2f3;text-align:left}
+        thead th{background:#f3f4f6;position:sticky;top:0;z-index:6}
+        .code{font-family:monospace;background:rgba(11,107,59,0.06);padding:4px 8px;border-radius:6px}
+        .muted{color:var(--muted)}
+        .actions{white-space:nowrap;text-align:right}
+        .small-btn{padding:6px 8px;border-radius:8px;font-weight:700}
+        .charts{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+        .chart-card{background:#fff;padding:10px;border-radius:10px;border:1px solid #eef2f1}
+        .footer{margin-top:12px;color:var(--muted);font-size:.92rem}
+        @media (max-width:900px){.charts{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header class="top">
+        <div class="brand">
+            <div class="logo">PAY</div>
+            <div>
+                <h1>Compensation of Employees</h1>
+                <div class="sub">Manage payroll records — add, edit, review, export & print</div>
+            </div>
+        </div>
+        <div class="top-actions">
+            <button onclick="location.href='Dashboard.html'">🏠 Home</button>
+            <button onclick="location.href='ChartOfAccounts.html'">Chart of Accounts</button>
+            <button onclick="location.href='GeneralLedger.html'">General Ledger</button>
+            <button onclick="location.href='Settings.html'">Settings</button>
+        </div>
+    </header>
+
+    <!-- Summary KPIs -->
+    <section class="grid cols-3">
+        <div class="card">
+            <div class="muted">Total Employees</div><div id="kpiEmployees" style="font-size:1.5rem;font-weight:800">—</div>
+        </div>
+        <div class="card">
+            <div class="muted">Total Net Pay (Current Selection)</div><div id="kpiNet" style="font-size:1.5rem;font-weight:800">—</div>
+        </div>
+        <div class="card">
+            <div class="muted">Average Net Pay</div><div id="kpiAvg" style="font-size:1.5rem;font-weight:800">—</div>
+        </div>
+    </section>
+
+    <!-- Form + Filters -->
+    <section style="display:flex;gap:12px;margin-top:12px;align-items:flex-start">
+        <div style="flex:1" class="card">
+            <h3 style="margin:0 0 8px 0">Add / Edit Compensation</h3>
+            <div id="formWrap">
+                <div class="form-row">
+                    <div style="flex:1">
+                        <label class="small">Employee ID</label>
+                        <input id="empId" placeholder="E12345" />
+                    </div>
+                    <div style="flex:2">
+                        <label class="small">Employee Name</label>
+                        <input id="empName" placeholder="Jane Doe" />
+                    </div>
+                    <div style="flex:1">
+                        <label class="small">Department</label>
+                        <input id="empDept" placeholder="Finance" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div style="flex:1">
+                        <label class="small">Position</label>
+                        <input id="empPos" placeholder="Accountant" />
+                    </div>
+                    <div style="flex:1">
+                        <label class="small">Month</label>
+                        <select id="empMonth">
+                            <option value="01">January</option><option value="02">February</option><option value="03">March</option><option value="04">April</option>
+                            <option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option>
+                            <option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                        </select>
+                    </div>
+                    <div style="flex:1">
+                        <label class="small">Year</label>
+                        <input id="empYear" type="number" value="" placeholder="2025" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div style="flex:1">
+                        <label class="small">Basic Salary</label>
+                        <input id="empBasic" type="number" placeholder="0.00" />
+                    </div>
+                    <div style="flex:1">
+                        <label class="small">Allowances</label>
+                        <input id="empAllow" type="number" placeholder="0.00" />
+                    </div>
+                    <div style="flex:1">
+                        <label class="small">Bonuses</label>
+                        <input id="empBonus" type="number" placeholder="0.00" />
+                    </div>
+                    <div style="flex:1">
+                        <label class="small">Deductions</label>
+                        <input id="empDeduct" type="number" placeholder="0.00" />
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+                    <button id="addBtn" class="primary">Add Record</button>
+                    <button id="updateBtn" style="display:none">Save</button>
+                    <button id="cancelEditBtn" style="display:none">Cancel</button>
+                    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                        <button id="exportCsv" class="small-btn">Export CSV</button>
+                        <button id="exportXlsx" class="small-btn">Export XLSX</button>
+                        <button id="printBtn" class="small-btn">Print</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters + quick stats -->
+        <div style="width:320px" class="card">
+            <h3 style="margin:0 0 8px 0">Filters</h3>
+            <div style="display:flex;flex-direction:column;gap:8px">
+                <input id="filterName" placeholder="Filter by name" />
+                <input id="filterDept" placeholder="Filter by department" />
+                <div style="display:flex;gap:8px">
+                    <select id="filterMonth"><option value="">All months</option></select>
+                    <input id="filterYear" placeholder="Year" />
+                </div>
+                <button id="applyFilter" class="small-btn">Apply</button>
+                <button id="clearFilter" class="small-btn">Clear</button>
+            </div>
+            <hr style="margin:10px 0;border:none;border-top:1px solid #f1f2f3" />
+            <div class="muted">Quick totals</div>
+            <div style="margin-top:8px">
+                <div>Total Basic: <strong id="totalBasic">0</strong></div>
+                <div>Total Net: <strong id="totalNet">0</strong></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Table + Charts -->
+    <section style="margin-top:12px;display:grid;grid-template-columns:1fr;gap:12px">
+        <div class="card table-wrap">
+            <table id="compTable">
+                <thead>
+                <tr><th>Emp ID</th><th>Name</th><th>Department</th><th>Position</th><th>Period</th><th>Basic</th><th>Allow</th><th>Bonus</th><th>Deduct</th><th>Net</th><th class="actions">Actions</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="charts card">
+            <div class="chart-card">
+                <canvas id="trendChart" height="220"></canvas>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+                <div class="chart-card"><canvas id="deptChart" height="150"></canvas></div>
+                <div class="chart-card"><canvas id="pieChart" height="150"></canvas></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="footer">All changes are saved to your browser (localStorage). Use Export to move data between devices.</div>
+</div>
+
+<script>
+    /* ======= Compensation App JS ======= */
+    const STORAGE_KEY = 'compensation_v1';
+    let rows = loadRows() || [];
+
+    // DOM refs
+    const tbody = document.querySelector('#compTable tbody');
+    const addBtn = document.getElementById('addBtn');
+    const updateBtn = document.getElementById('updateBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const exportCsv = document.getElementById('exportCsv');
+    const exportXlsx = document.getElementById('exportXlsx');
+    const printBtn = document.getElementById('printBtn');
+
+    // form fields
+    const f = {
+        id: document.getElementById('empId'),
+        name: document.getElementById('empName'),
+        dept: document.getElementById('empDept'),
+        pos: document.getElementById('empPos'),
+        month: document.getElementById('empMonth'),
+        year: document.getElementById('empYear'),
+        basic: document.getElementById('empBasic'),
+        allow: document.getElementById('empAllow'),
+        bonus: document.getElementById('empBonus'),
+        deduct: document.getElementById('empDeduct')
+    };
+
+    // filters
+    const filterName = document.getElementById('filterName');
+    const filterDept = document.getElementById('filterDept');
+    const filterMonth = document.getElementById('filterMonth');
+    const filterYear = document.getElementById('filterYear');
+    const applyFilter = document.getElementById('applyFilter');
+    const clearFilter = document.getElementById('clearFilter');
+
+    // KPIs
+    const kpiEmployees = document.getElementById('kpiEmployees');
+    const kpiNet = document.getElementById('kpiNet');
+    const kpiAvg = document.getElementById('kpiAvg');
+    const totalBasicEl = document.getElementById('totalBasic');
+    const totalNetEl = document.getElementById('totalNet');
+
+    // charts
+    let trendChart, deptChart, pieChart;
+
+    // initialize month select for filters (add blank + months)
+    (function initMonths(){
+        const opts = [{v:'',t:'All months'},{v:'01',t:'Jan'},{v:'02',t:'Feb'},{v:'03',t:'Mar'},{v:'04',t:'Apr'},{v:'05',t:'May'},{v:'06',t:'Jun'},{v:'07',t:'Jul'},{v:'08',t:'Aug'},{v:'09',t:'Sep'},{v:'10',t:'Oct'},{v:'11',t:'Nov'},{v:'12',t:'Dec'}];
+        filterMonth.innerHTML = opts.map(o=>`<option value="${o.v}">${o.t}</option>`).join('');
+    })();
+
+    // helpers
+    function loadRows(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }catch(e){return [];} }
+    function saveRows(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(rows)); }
+    function formatCurrency(v){ return Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+    function calcNet(r){ return (Number(r.basic)||0) + (Number(r.allow)||0) + (Number(r.bonus)||0) - (Number(r.deduct)||0); }
+
+    // render table and KPIs & charts
+    function render(){
+        // filters
+        const qName = filterName.value.trim().toLowerCase();
+        const qDept = filterDept.value.trim().toLowerCase();
+        const qMonth = filterMonth.value;
+        const qYear = filterYear.value.trim();
+        const filtered = rows.filter(r=>{
+            if(qName && !r.name.toLowerCase().includes(qName)) return false;
+            if(qDept && !r.dept.toLowerCase().includes(qDept)) return false;
+            if(qMonth && r.month !== qMonth) return false;
+            if(qYear && String(r.year) !== String(qYear)) return false;
+            return true;
+        });
+
+        // table
+        tbody.innerHTML = '';
+        filtered.forEach((r,idx)=>{
+            const net = calcNet(r);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${escapeHtml(r.id)}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.dept)}</td><td>${escapeHtml(r.pos)}</td><td>${escapeHtml(r.month)}/${escapeHtml(r.year)}</td>
+      <td>${formatCurrency(r.basic)}</td><td>${formatCurrency(r.allow)}</td><td>${formatCurrency(r.bonus)}</td><td>${formatCurrency(r.deduct)}</td><td>${formatCurrency(net)}</td>
+      <td class="actions"><button class="small-btn" onclick="enterEdit(${idx})">Edit</button> <button class="small-btn" onclick="delRow(${idx})">Delete</button></td>`;
+            tbody.appendChild(tr);
+        });
+
+        // KPIs
+        const nets = filtered.map(r=>calcNet(r));
+        const totalNet = nets.reduce((a,b)=>a+b,0);
+        const totalBasic = filtered.reduce((a,b)=>a + Number(b.basic||0),0);
+        kpiEmployees.textContent = new Set(filtered.map(r=>r.id)).size;
+        kpiNet.textContent = formatCurrency(totalNet);
+        kpiAvg.textContent = filtered.length ? formatCurrency(totalNet/filtered.length) : '0.00';
+        totalBasicEl.textContent = formatCurrency(totalBasic);
+        totalNetEl.textContent = formatCurrency(totalNet);
+
+        // charts update
+        updateCharts(filtered);
+    }
+    // add row
+    addBtn.addEventListener('click', ()=>{
+        const record = readForm();
+        if(!record) return;
+        rows.unshift(record);
+        saveRows(); clearForm(); render(); updateDashboardSummary();
+    });
+
+    // exports
+    exportCsv.addEventListener('click', ()=>{
+        const hdr = ['EmpID','Name','Dept','Position','Month','Year','Basic','Allow','Bonus','Deduct'];
+        const lines = [hdr.join(',')];
+        rows.forEach(r=> lines.push([r.id,r.name,r.dept,r.pos,r.month,r.year,r.basic,r.allow,r.bonus,r.deduct].map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')));
+        const blob = new Blob([lines.join("\n")], {type:'text/csv'});
+        const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='compensation.csv'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    exportXlsx.addEventListener('click', ()=>{
+        /* Use SheetJS to generate an XLSX file */
+        const ws_data = [['EmpID','Name','Dept','Position','Month','Year','Basic','Allow','Bonus','Deduct','Net']];
+        rows.forEach(r=> ws_data.push([r.id,r.name,r.dept,r.pos,r.month,r.year,Number(r.basic)||0,Number(r.allow)||0,Number(r.bonus)||0,Number(r.deduct)||0, calcNet(r)]));
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+        XLSX.utils.book_append_sheet(wb, ws, 'Compensation');
+        XLSX.writeFile(wb, 'compensation.xlsx');
+    });
+
+    // print: reuse earlier pattern — open new window containing only table and title
+    printBtn.addEventListener('click', ()=>{
+        const tbl = document.querySelector('#compTable').outerHTML;
+        const company = prompt('Company name (optional):','');
+        const html = `<!doctype html><html><head><meta charset="utf-8"><title>Print</title><style>body{font-family:Inter,Arial;margin:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px;text-align:left}thead th{background:#f3f4f6}</style></head><body><h2>Compensation of Employees</h2>${company?'<div>'+escapeHtml(company)+'</div>':''}<div>${new Date().toLocaleDateString()}</div>${tbl}</body></html>`;
+        const w = window.open('','_blank'); w.document.open(); w.document.write(html); w.document.close(); w.print();
+    });
+
+    // read form values into object; validation basic
+    function readForm(){
+        const id = f.id.value.trim(); const name = f.name.value.trim();
+        if(!id || !name){ alert('Please supply Employee ID and Name'); return null; }
+        return {
+            id, name,
+            dept: f.dept.value.trim(),
+            pos: f.pos.value.trim(),
+            month: f.month.value,
+            year: f.year.value || (new Date()).getFullYear(),
+            basic: parseFloat(f.basic.value) || 0,
+            allow: parseFloat(f.allow.value) || 0,
+            bonus: parseFloat(f.bonus.value) || 0,
+            deduct: parseFloat(f.deduct.value) || 0,
+            created: Date.now()
+        };
+    }
+    function clearForm(){ Object.values(f).forEach(inp=> inp.value=''); }
+
+    // edit flow
+    let editIndex = null;
+    function enterEdit(idx){
+        const rec = rows[idx];
+        if(!rec) return;
+        editIndex = idx;
+        f.id.value = rec.id; f.name.value = rec.name; f.dept.value = rec.dept; f.pos.value = rec.pos;
+        f.month.value = rec.month; f.year.value = rec.year; f.basic.value = rec.basic; f.allow.value = rec.allow; f.bonus.value = rec.bonus; f.deduct.value = rec.deduct;
+        addBtn.style.display='none'; updateBtn.style.display='inline-block'; cancelEditBtn.style.display='inline-block';
+    }
+    updateBtn.addEventListener('click', ()=>{
+        if(editIndex===null) return;
+        const data = readForm(); if(!data) return;
+        rows[editIndex] = data; saveRows(); clearForm(); editIndex = null; addBtn.style.display='inline-block'; updateBtn.style.display='none'; cancelEditBtn.style.display='none'; render(); updateDashboardSummary();
+    });
+    cancelEditBtn.addEventListener('click', ()=>{ clearForm(); editIndex=null; addBtn.style.display='inline-block'; updateBtn.style.display='none'; cancelEditBtn.style.display='none'; });
+
+    // delete
+    function delRow(idx){ if(!confirm('Delete record?')) return; rows.splice(idx,1); saveRows(); render(); updateDashboardSummary(); }
+
+    // filters
+    applyFilter.addEventListener('click', ()=> render());
+    clearFilter.addEventListener('click', ()=> { filterName.value=''; filterDept.value=''; filterMonth.value=''; filterYear.value=''; render(); });
+
+    // Charts initialization
+    function initCharts(){
+        const tctx = document.getElementById('trendChart').getContext('2d');
+        trendChart = new Chart(tctx, {type:'line',data:{labels:[],datasets:[{label:'Total Net Pay',data:[],fill:true,backgroundColor:'rgba(46,182,125,0.12)',borderColor:'rgba(46,182,125,1)'}]},options:{responsive:true}});
+
+        const dctx = document.getElementById('deptChart').getContext('2d');
+        deptChart = new Chart(dctx, {type:'bar',data:{labels:[],datasets:[{label:'Total Net',data:[],backgroundColor:'rgba(59,130,246,0.7)'}]},options:{responsive:true}});
+
+        const pctx = document.getElementById('pieChart').getContext('2d');
+        pieChart = new Chart(pctx, {type:'pie',data:{labels:[],datasets:[{data:[],backgroundColor:['#10b981','#f59e0b','#ef4444','#3b82f6','#8b5cf6']}],options:{responsive:true}}});
+    }
+
+    // update charts from filtered data
+    function updateCharts(filtered){
+        // Trend: aggregate by month-year key
+        const map = {};
+        filtered.forEach(r=>{
+            const key = r.year+'-'+r.month;
+            map[key] = (map[key]||0) + calcNet(r);
+        });
+        const labels = Object.keys(map).sort();
+        const data = labels.map(k=>map[k]);
+        trendChart.data.labels = labels; trendChart.data.datasets[0].data = data; trendChart.update();
+
+        // Dept bar: sum net by dept
+        const dmap = {};
+        filtered.forEach(r=>{ const d = r.dept || 'Unassigned'; dmap[d] = (dmap[d]||0) + calcNet(r); });
+        const dlabels = Object.keys(dmap);
+        const ddata = dlabels.map(k=>dmap[k]);
+        deptChart.data.labels = dlabels; deptChart.data.datasets[0].data = ddata; deptChart.update();
+
+        // Pie: allowances vs deductions totals
+        const totalAllow = filtered.reduce((s,r)=>s + (Number(r.allow)||0),0);
+        const totalDeduct = filtered.reduce((s,r)=>s + (Number(r.deduct)||0),0);
+        pieChart.data.labels = ['Allowances','Deductions']; pieChart.data.datasets[0].data = [totalAllow,totalDeduct]; pieChart.update();
+    }
+
+    // helper: calcNet internal copy
+    function calcNet(r){ return (Number(r.basic)||0) + (Number(r.allow)||0) + (Number(r.bonus)||0) - (Number(r.deduct)||0); }
+
+    // update dashboard summary by writing into localStorage key 'dashboard_comp_summary' for Dashboard page to read
+    function updateDashboardSummary(){
+        const totalEmployees = new Set(rows.map(r=>r.id)).size;
+        const totalNet = rows.reduce((s,r)=>s + calcNet(r),0);
+        const payload = { totalEmployees, totalNet, lastUpdated: Date.now() };
+        localStorage.setItem('dashboard_comp_summary', JSON.stringify(payload));
+    }
+
+    // utility escape
+    function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function escapeAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
+
+    // initialize charts and render initial
+    initCharts();
+    render();
+    updateDashboardSummary();
+
+    // expose small functions used inline
+    window.enterEdit = enterEdit;
+    window.delRow = delRow;
+</script>
+</body>
+</html>
+
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Dashboard</title>
+    <style>
+        body{font-family:Inter,Arial,Helvetica,sans-serif;background:#f7f9fb;margin:20px;color:#0f172a}
+        .wrap{max-width:1100px;margin:0 auto}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+        .card{background:#fff;padding:12px;border-radius:10px;border:1px solid #eef2f1;box-shadow:0 8px 24px rgba(11,107,59,0.04)}
+        .kpis{display:flex;gap:12px}
+        .kpi{flex:1;padding:12px}
+    </style></head><body>
+<div class="wrap">
+    <div class="header">
+        <h2>Dashboard</h2>
+        <div><button onclick="location.href='Compensation of Employees.html'">Compensation</button></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <div class="card">
+            <h3>Main dashboard content</h3>
+            <p>... existing dashboard widgets ...</p>
+        </div>
+        <div class="card">
+            <h4>Compensation Summary</h4>
+            <div id="compSummary" style="font-size:0.95rem">
+                <div>Total employees: <strong id="ds_totalEmployees">—</strong></div>
+                <div>Total net pay: <strong id="ds_totalNet">—</strong></div>
+                <div>Last updated: <strong id="ds_updated">—</strong></div>
+            </div>
+            <div style="margin-top:8px"><button onclick="location.href='Compensation of Employees.html'">Open payroll</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function renderCompSummary(){
+        try{
+            const raw = localStorage.getItem('dashboard_comp_summary');
+            if(!raw){ document.getElementById('ds_totalEmployees').textContent='0'; document.getElementById('ds_totalNet').textContent='0.00'; document.getElementById('ds_updated').textContent='Never'; return; }
+            const obj = JSON.parse(raw);
+            document.getElementById('ds_totalEmployees').textContent = obj.totalEmployees;
+            document.getElementById('ds_totalNet').textContent = Number(obj.totalNet||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+            document.getElementById('ds_updated').textContent = new Date(obj.lastUpdated).toLocaleString();
+        }catch(e){ console.error(e); }
+    }
+    // initial
+    renderCompSummary();
+    // also refresh periodically in case user updates payroll in another tab
+    setInterval(renderCompSummary, 3000);
+</script>
+
+</body></html>

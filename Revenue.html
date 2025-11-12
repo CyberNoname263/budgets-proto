@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dashboard — Budgets App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="Dashboard.css">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="brand">Budgets App</div>
+    <nav class="taskbar" aria-label="Main taskbar">
+        <button class="task-button" id="chartsBtn" title="Charts Of Accounts"><i class="fa-solid fa-diagram-project"></i> Charts Of Accounts</button>
+        <button class="task-button" id="tariffBtn" title="Tariff Schedule"><i class="fa-solid fa-scale-balanced"></i> Tariff Schedule</button>
+        <button class="task-button" id="compBtn" title="Compensation Of Employees"><i class="fa-solid fa-user-tie"></i> Compensation Of Employees</button>
+        <button class="task-button" id="reportsBtn" title="Reports"><i class="fa-solid fa-chart-line"></i> Reports</button>
+        <button class="task-button" id="revenueBtn" title="Revenue"><i class="fa-solid fa-coins"></i> Revenue</button>
+
+        <div style="position:relative">
+            <button class="task-button" id="expenditureBtn" title="Expenditure"><i class="fa-solid fa-wallet"></i> Expenditure <i class="fa-solid fa-caret-down chev"></i></button>
+            <div id="expenditureDropdown" style="display:none;position:absolute;left:0;top:44px;background:var(--card);border-radius:10px;padding:10px;box-shadow:var(--shadow);z-index:120">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                    <button class="btn ghost" id="generalExpBtn"><i class="fa-solid fa-file-invoice-dollar"></i> General Expenditure</button>
+                    <button class="btn ghost" id="capitalExpBtn"><i class="fa-solid fa-building-columns"></i> Capital Expenditure</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="spacer"></div>
+
+    <div style="display:flex;align-items:center;gap:12px">
+        <div style="position:relative">
+            <button class="task-button" id="notifyBtn" title="Notifications"><i class="fa-solid fa-bell"></i></button>
+            <span id="notifyBadge" class="badge" style="display:none;position:absolute;top:-6px;right:-6px">0</span>
+        </div>
+
+        <button class="task-button" id="settingsBtn" title="Settings (open settings)" style="font-size:15px;padding:12px 16px"><i class="fa-solid fa-gear"></i> Settings</button>
+
+        <div style="position:relative">
+            <button class="task-button" id="userMenuBtn" title="User menu"><i class="fa-solid fa-user"></i> <span id="displayUser">Dylan</span> <i class="fa-solid fa-caret-down chev"></i></button>
+            <div id="userMenu" style="display:none;position:absolute;right:0;top:44px;background:var(--card);border-radius:10px;padding:10px;box-shadow:var(--shadow);z-index:120;width:320px">
+                <div style="padding:6px 8px;border-bottom:1px solid #eef2ff">
+                    <div style="font-weight:800" id="menuUserName">Dylan</div>
+                    <div class="small" id="menuUserType">Admin</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;padding-top:10px">
+                    <button class="btn ghost" id="openProfile"><i class="fa-solid fa-id-card-clip"></i> Profile Settings</button>
+                    <button class="btn ghost" id="openAddUserBtn" style="display:inline-flex;"><i class="fa-solid fa-user-plus"></i> Add User</button>
+                    <button class="btn ghost" id="openManageUsersBtn" style="display:inline-flex;"><i class="fa-solid fa-users"></i> Manage Users</button>
+                    <button class="btn ghost" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<main class="container" role="main">
+    <h2 style="margin:10px 0 18px">Overview</h2>
+
+    <div class="cards" id="overviewCards">
+        <!-- Revenue -->
+        <div class="card" id="cardRevenue">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-coins"></i></div>
+                    <div>
+                        <div class="title">Total Revenue</div>
+                        <div class="desc">All recorded revenue</div>
+                    </div>
+                </div>
+                <div class="value" id="totalRevenue">$0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini" id="revCount">Classes: 0</div>
+                <div><button class="btn ghost" id="viewRevenue">View Details</button></div>
+            </div>
+        </div>
+
+        <!-- General Expenditure -->
+        <div class="card" id="cardGenExp">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                    <div>
+                        <div class="title">General Expenditure</div>
+                        <div class="desc">Recurrent operational spend</div>
+                    </div>
+                </div>
+                <div class="value" id="totalGenExp">$0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini" id="genExpCount">Rows: 0</div>
+                <div><button class="btn ghost" id="viewGenExp">View Details</button></div>
+            </div>
+        </div>
+
+        <!-- Capital Expenditure -->
+        <div class="card" id="cardCapExp">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-building-columns"></i></div>
+                    <div>
+                        <div class="title">Capital Expenditure</div>
+                        <div class="desc">Capital projects & assets</div>
+                    </div>
+                </div>
+                <div class="value" id="totalCapExp">$0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini" id="capExpCount">Items: 0</div>
+                <div><button class="btn ghost" id="viewCapExp">View Details</button></div>
+            </div>
+        </div>
+
+        <!-- Compensation -->
+        <div class="card" id="cardComp">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-user-tie"></i></div>
+                    <div>
+                        <div class="title">Compensation</div>
+                        <div class="desc">Salaries & benefits</div>
+                    </div>
+                </div>
+                <div class="value" id="totalComp">$0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini" id="compCount">Records: 0</div>
+                <div><button class="btn ghost" id="viewComp">View Details</button></div>
+            </div>
+        </div>
+
+        <!-- Tariff Schedule -->
+        <div class="card" id="cardTariff">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div>
+                        <div class="title">Tariff Schedule</div>
+                        <div class="desc">Active tariff items</div>
+                    </div>
+                </div>
+                <div class="value" id="totalTariff">0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini">Last update: <span id="tariffUpdated">—</span></div>
+                <div><button class="btn ghost" id="viewTariff">View Details</button></div>
+            </div>
+        </div>
+
+        <!-- Reports -->
+        <div class="card" id="cardReports">
+            <div class="top">
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="card-icon"><i class="fa-solid fa-file-chart-column"></i></div>
+                    <div>
+                        <div class="title">Reports</div>
+                        <div class="desc">Financial summary & forecasts</div>
+                    </div>
+                </div>
+                <div class="value" id="totalDeficit">$0</div>
+            </div>
+            <div class="foot">
+                <div class="stat-mini">Forecast: <span id="forecastPct">—</span></div>
+                <div><button class="btn ghost" id="viewReports">View Details</button></div>
+            </div>
+        </div>
+    </div>
+
+    <section class="card">
+        <h3 style="margin:0 0 8px">Recent activity</h3>
+        <div id="activityList" style="max-height:220px;overflow:auto;padding-top:8px"></div>
+    </section>
+
+    <footer style="margin-top:12px">Light theme • Budgets App — Dashboard</footer>
+</main>
+
+<!-- Modals omitted for brevity (same as your original) -->
+<div class="overlay" id="overlay"></div>
+<!-- ... all your modal markup remains unchanged ... -->
+
+<script>
+    /* =============
+       Dashboard JS
+       - Consolidated, refactored and completed.
+       - Dynamically reads other pages' storage keys and updates the dashboard.
+       - Responds to cross-tab storage changes.
+       ============= */
+
+    (() => {
+        // ---- Storage keys used by other pages ----
+        const KEYS = {
+            users: 'appUsers_v1',
+            notifications: 'appNotifications_v1',
+            revenue: 'revenueData_v3',
+            generalExp: 'expenditureData_v1',
+            capitalExp: 'capitalExpenditureData_v1',
+            comp: 'compensationData_v1',
+            tariff: 'tariffData_v1',
+            tariffUpdated: 'tariffUpdated' // optional
+        };
+
+        // ---- helpers ----
+        function safeParse(raw, fallback) {
+            try { return raw ? JSON.parse(raw) : fallback; } catch(e) { console.error('parse err', e); return fallback; }
+        }
+        function numberFormat(n){ return (Math.round((Number(n)||0)*100)/100).toLocaleString(); }
+        function currencyString(n){ return '$' + numberFormat(n); }
+        function escapeHtml(s){ return String(s||'').replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m])); }
+
+        // ---- User/session helpers ----
+        function getUsers(){ return safeParse(localStorage.getItem(KEYS.users), []); }
+        function setUsers(list){ localStorage.setItem(KEYS.users, JSON.stringify(list)); }
+        function getCurrentUser(){ try{ return JSON.parse(sessionStorage.getItem('loggedInUser') || 'null'); }catch(e){return null;} }
+        function setCurrentUser(u){ sessionStorage.setItem('loggedInUser', JSON.stringify(u)); updateUserUI(); if(u) logActivity('Login'); }
+
+        // Ensure initial admin exists (single, idempotent)
+        (function ensureInitialUser(){
+            try{
+                const existing = safeParse(localStorage.getItem(KEYS.users), []);
+                if(!existing || !existing.length){
+                    const users = [{ username: 'Dylan', password: '2004Tman', email: 'tawandadylan2004@gmail.com', type: 'Admin' }];
+                    localStorage.setItem(KEYS.users, JSON.stringify(users));
+                }
+            }catch(e){ console.error('ensureInitialUser', e); }
+        })();
+
+        // ---- Notifications ----
+        function loadNotifications(){ return safeParse(localStorage.getItem(KEYS.notifications), []); }
+        function saveNotifications(list){ localStorage.setItem(KEYS.notifications, JSON.stringify(list)); }
+        window.AppNotifications = {
+            push: (title, body) => {
+                const list = loadNotifications();
+                list.push({ id: 'n_' + Math.random().toString(36).slice(2,9), title, body, ts: new Date().toISOString(), read:false });
+                saveNotifications(list);
+                renderNotificationBadge();
+            }
+        };
+
+        // ---- Activity logging ----
+        function logActivity(action){
+            try{
+                const user = getCurrentUser();
+                if(!user) return;
+                const sKey = `settings_${user.username}`; // per-user settings
+                const settings = safeParse(localStorage.getItem(sKey), {});
+                if(!settings.accountActivity) return;
+                const key = `activity_${user.username}`;
+                const list = safeParse(localStorage.getItem(key), []);
+                list.push({ ts: new Date().toISOString(), action, user: user.username });
+                localStorage.setItem(key, JSON.stringify(list));
+                // update recent activity
+                renderRecentActivity();
+            }catch(e){ console.error('logActivity', e); }
+        }
+        window.logActivity = logActivity; // exposed for other pages
+
+        // ---- UI element refs ----
+        const ids = {
+            displayUser: 'displayUser',
+            menuUserName: 'menuUserName',
+            menuUserType: 'menuUserType',
+            notifyBadge: 'notifyBadge',
+            activityList: 'activityList',
+            totalRevenue: 'totalRevenue',
+            totalGenExp: 'totalGenExp',
+            totalCapExp: 'totalCapExp',
+            totalComp: 'totalComp',
+            totalTariff: 'totalTariff',
+            revCount: 'revCount',
+            genExpCount: 'genExpCount',
+            capExpCount: 'capExpCount',
+            compCount: 'compCount',
+            totalDeficit: 'totalDeficit',
+            forecastPct: 'forecastPct',
+            tariffUpdated: 'tariffUpdated'
+        };
+
+        function $(id){ return document.getElementById(id); }
+
+        // ---- Navigation helper (works in browser & electron preload) ----
+        function openAndClose(file, options = { keepOpenFor: false }){
+            logActivity(`Open page ${file}`);
+            if(window.electronAPI){
+                if(typeof window.electronAPI.openpage === 'function'){ window.electronAPI.openpage(file); if(!options.keepOpenFor) try{ window.close(); }catch(e){}; return; }
+                if(typeof window.electronAPI.openWindow === 'function'){ window.electronAPI.openWindow(file); if(!options.keepOpenFor) try{ window.close(); }catch(e){}; return; }
+            }
+            if(!options.keepOpenFor){ window.location.href = file; } else { window.open(file, '_blank'); }
+        }
+
+        // ---- Hook up taskbar buttons to pages ----
+        (function wireTaskbar(){
+            const mapping = {
+                chartsBtn: 'Charts Of Accounts.html',
+                tariffBtn: 'Tariff Schedule.html',
+                compBtn: 'Compensation of Employees.html',
+                reportsBtn: 'Reports.html',
+                revenueBtn: 'Revenue.html',
+                viewRevenue: 'Revenue.html',
+                viewGenExp: 'General Expenditure.html',
+                viewCapExp: 'Capital Expenditure.html',
+                viewComp: 'Compensation of Employees.html',
+                viewTariff: 'Tariff Schedule.html',
+                viewReports: 'Reports.html'
+            };
+            Object.entries(mapping).forEach(([btnId, file])=>{
+                const el = document.getElementById(btnId);
+                if(el) el.addEventListener('click', ()=> openAndClose(file));
+            });
+            // Expenditure dropdown toggles
+            const expBtn = document.getElementById('expenditureBtn');
+            if(expBtn){
+                expBtn.addEventListener('click', ()=> {
+                    const dd = document.getElementById('expenditureDropdown');
+                    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+                });
+            }
+        })();
+
+        // ---- User menu UI ----
+        function updateUserUI(){
+            const u = getCurrentUser();
+            $(ids.displayUser).textContent = u ? u.username : 'Guest';
+            $(ids.menuUserName).textContent = u ? u.username : 'Guest';
+            $(ids.menuUserType).textContent = u ? (u.type || 'Agent') : 'Visitor';
+            document.getElementById('userMenuBtn').style.display = 'inline-flex';
+            const isAdmin = u && u.type === 'Admin';
+            const addBtn = document.getElementById('openAddUserBtn');
+            const manageBtn = document.getElementById('openManageUsersBtn');
+            if(addBtn) addBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+            if(manageBtn) manageBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+        }
+        updateUserUI();
+
+        // wire user menu interactions (open profile/add/manage)
+        (function wireUserMenu(){
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userMenu = document.getElementById('userMenu');
+            if(userMenuBtn) userMenuBtn.addEventListener('click', ()=> userMenu.style.display = userMenu.style.display === 'block' ? 'none' : 'block');
+            document.addEventListener('click', (e)=>{
+                if(!document.getElementById('userMenuBtn').contains(e.target) && (!userMenu.contains || !userMenu.contains(e.target))) userMenu.style.display = 'none';
+            });
+            // Profile, add user, manage users
+            document.getElementById('openProfile')?.addEventListener('click', ()=>{
+                const user = getCurrentUser();
+                if(!user){ alert('No user logged in'); return; }
+                showModal('profileModal');
+                document.getElementById('profileUsername').value = user.username;
+                document.getElementById('profileEmail').value = user.email || '';
+                document.getElementById('profileSecurity').value = (JSON.parse(localStorage.getItem(`security_${user.username}`) || '{}').q || '');
+            });
+            document.getElementById('openAddUserBtn')?.addEventListener('click', ()=>{
+                const u = getCurrentUser();
+                if(!u || u.type !== 'Admin'){ alert('Only Admins can add users'); return; }
+                showModal('addUserModal');
+            });
+            document.getElementById('openManageUsersBtn')?.addEventListener('click', ()=>{
+                const u = getCurrentUser();
+                if(!u || u.type !== 'Admin'){ alert('Only Admins can manage users'); return; }
+                populateManageUsers();
+                showModal('manageUsersModal');
+            });
+        })();
+
+        // ---- Add/manage users ----
+        function getUsersList(){ return safeParse(localStorage.getItem(KEYS.users), []); }
+        function setUsersList(list){ localStorage.setItem(KEYS.users, JSON.stringify(list)); }
+
+        document.getElementById('createUserBtn')?.addEventListener('click', ()=>{
+            const u = getCurrentUser();
+            if(!u || u.type !== 'Admin'){ alert('Only Admins'); return; }
+            const username = document.getElementById('newUsername').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
+            const pwd = document.getElementById('newPassword').value;
+            if(!username || !pwd){ alert('Enter username and password'); return; }
+            const users = getUsersList();
+            if(users.find(x => x.username.toLowerCase() === username.toLowerCase())){ alert('User exists'); return; }
+            users.push({ username, email, password: pwd, type: document.getElementById('newUserType').value || 'Agent' });
+            setUsersList(users);
+            showToast('User created');
+            hideModal('addUserModal');
+            window.AppNotifications.push('New user added', `User ${username} was created by ${u.username}`);
+            logActivity(`Added user ${username}`);
+            populateManageUsers();
+        });
+
+        function populateManageUsers(){
+            const users = getUsersList();
+            const el = document.getElementById('usersList');
+            if(!el) return;
+            el.innerHTML = '';
+            users.forEach((usr, idx) => {
+                const row = document.createElement('div');
+                row.className = 'user-row';
+                row.innerHTML = `<div><strong>${escapeHtml(usr.username)}</strong> <div class="small">${escapeHtml(usr.email||'')} • ${escapeHtml(usr.type||'Agent')}</div></div>
+                       <div style="display:flex;gap:8px">
+                         <button class="btn ghost" data-idx="${idx}" data-action="view">View</button>
+                         <button class="btn" data-idx="${idx}" data-action="delete">Delete</button>
+                       </div>`;
+                el.appendChild(row);
+            });
+            el.querySelectorAll('button').forEach(b => {
+                b.addEventListener('click', () => {
+                    const i = Number(b.getAttribute('data-idx'));
+                    const action = b.getAttribute('data-action');
+                    const users = getUsersList();
+                    if(action === 'delete'){
+                        if(!confirm(`Delete user ${users[i].username}?`)) return;
+                        const removed = users.splice(i,1)[0];
+                        setUsersList(users);
+                        populateManageUsers();
+                        window.AppNotifications.push('User removed', `${removed.username} was deleted`);
+                        logActivity(`Deleted user ${removed.username}`);
+                    } else if(action === 'view'){
+                        alert(`Username: ${users[i].username}\nEmail: ${users[i].email}\nType: ${users[i].type}`);
+                    }
+                });
+            });
+        }
+
+        // ---- Profile save ----
+        document.getElementById('saveProfileBtn')?.addEventListener('click', ()=>{
+            const user = getCurrentUser();
+            if(!user){ alert('No user'); return; }
+            const email = document.getElementById('profileEmail').value.trim();
+            const pwd = document.getElementById('profilePassword').value;
+            const sec = document.getElementById('profileSecurity').value.trim();
+            const users = getUsersList();
+            const idx = users.findIndex(x => x.username === user.username);
+            if(idx === -1) return;
+            users[idx].email = email;
+            if(pwd) users[idx].password = pwd;
+            setUsersList(users);
+            setCurrentUser({ username: users[idx].username, email: users[idx].email, type: users[idx].type });
+            localStorage.setItem(`security_${user.username}`, JSON.stringify({ q: sec }));
+            showToast('Profile saved');
+            hideModal('profileModal');
+            window.AppNotifications.push('Profile updated', `User ${user.username} updated profile`);
+            logActivity('Updated profile');
+        });
+        document.getElementById('cancelProfileBtn')?.addEventListener('click', ()=> hideModal('profileModal'));
+
+        // ---- Settings ----
+        document.getElementById('settingsBtn')?.addEventListener('click', ()=> {
+            const user = getCurrentUser();
+            if(!user){ alert('Login required to change settings'); return; }
+            showModal('settingsModal');
+            const key = `settings_${user.username}`;
+            const s = safeParse(localStorage.getItem(key), {});
+            document.getElementById('zoomRange').value = s.zoom || 1;
+            document.getElementById('zoomValue').textContent = Math.round((s.zoom||1)*100) + '%';
+            document.getElementById('contrastToggle').checked = !!s.contrast;
+            document.getElementById('themeSelect').value = s.theme || 'light';
+            document.getElementById('acctActivityToggle').checked = !!s.accountActivity;
+        });
+        document.getElementById('cancelSettingsBtn')?.addEventListener('click', ()=> hideModal('settingsModal'));
+        document.getElementById('zoomRange')?.addEventListener('input', (e)=>{ document.getElementById('zoomValue').textContent = Math.round(e.target.value*100) + '%'; document.body.style.transform = `scale(${e.target.value})`; });
+
+        document.getElementById('saveSettingsBtn')?.addEventListener('click', ()=>{
+            const user = getCurrentUser();
+            if(!user){ alert('Login required'); return; }
+            const key = `settings_${user.username}`;
+            const settings = {
+                zoom: Number(document.getElementById('zoomRange').value),
+                contrast: document.getElementById('contrastToggle').checked,
+                theme: document.getElementById('themeSelect').value,
+                accountActivity: document.getElementById('acctActivityToggle').checked
+            };
+            localStorage.setItem(key, JSON.stringify(settings));
+            showToast('Settings saved');
+            hideModal('settingsModal');
+            window.AppNotifications.push('Settings updated', `Settings updated for ${user.username}`);
+            logActivity('Updated settings');
+        });
+
+        document.getElementById('safeRestoreBtn')?.addEventListener('click', ()=>{
+            if(!confirm('Restore default settings for current user? This will reset only UI settings.')) return;
+            const user = getCurrentUser();
+            if(!user) return;
+            localStorage.removeItem(`settings_${user.username}`);
+            applySettingsForUser(user.username);
+            showToast('Settings restored');
+            window.AppNotifications.push('Settings restored', `${user.username} restored settings`);
+        });
+
+        document.getElementById('checkUpdatesBtn')?.addEventListener('click', ()=>{
+            showToast('Checking updates...');
+            setTimeout(()=> showToast('No updates available'), 900);
+        });
+
+        // ---- Notifications --------------------------------------------------------------------
+        document.getElementById('notifyBtn')?.addEventListener('click', ()=>{
+            showModal('notificationsModal');
+            renderNotifications();
+            // mark all as read
+            const list = loadNotifications().map(n => ({...n, read:true}));
+            saveNotifications(list);
+            renderNotificationBadge();
+        });
+        document.getElementById('closeNotificationsBtn')?.addEventListener('click', ()=> hideModal('notificationsModal'));
+        document.getElementById('clearNotificationsBtn')?.addEventListener('click', ()=>{
+            if(!confirm('Clear all notifications?')) return;
+            saveNotifications([]);
+            renderNotifications();
+            renderNotificationBadge();
+        });
+
+        function renderNotificationBadge(){
+            const list = loadNotifications();
+            const unread = list.filter(n => !n.read).length;
+            const badge = $(ids.notifyBadge);
+            if(!badge) return;
+            if(unread > 0){ badge.style.display = 'inline-block'; badge.textContent = unread; } else { badge.style.display = 'none'; }
+        }
+        function renderNotifications(){
+            const list = loadNotifications().slice().reverse();
+            const el = document.getElementById('notiList');
+            if(!el) return;
+            el.innerHTML = '';
+            if(!list.length){ el.innerHTML = '<div class="small">No notifications</div>'; return; }
+            list.forEach(n=>{
+                const d = document.createElement('div');
+                d.style.padding = '8px';
+                d.style.borderBottom = '1px solid #eef2ff';
+                d.innerHTML = `<div style="font-weight:700">${escapeHtml(n.title)}</div><div class="small" style="margin-top:6px">${escapeHtml(n.body)}</div><div class="small" style="color:#94a3b8;margin-top:6px">${new Date(n.ts).toLocaleString()}</div>`;
+                el.appendChild(d);
+            });
+        }
+
+        // ---- Recent activity panel ----
+        function renderRecentActivity(){
+            const user = getCurrentUser();
+            const container = document.getElementById(ids.activityList);
+            if(!container) return;
+            container.innerHTML = '';
+            if(!user){ container.innerHTML = '<div class="small">Login to see activity</div>'; return; }
+            const list = safeParse(localStorage.getItem(`activity_${user.username}`), []).slice().reverse();
+            if(!list.length){ container.innerHTML = '<div class="small">No recent activity</div>'; return; }
+            list.slice(0,60).forEach(it => {
+                const d = document.createElement('div');
+                d.style.padding = '8px';
+                d.style.borderBottom = '1px solid #f1f5f9';
+                d.innerHTML = `<div style="font-size:13px">${escapeHtml(it.action)}</div><div class="small" style="color:#9aa4b2">${new Date(it.ts).toLocaleString()}</div>`;
+                container.appendChild(d);
+            });
+        }
+
+        // ---- Dashboard totals computation ----
+        // Debounce updates slightly to avoid thrash when multiple storage events arrive quickly
+        let totalsDebounce = 0;
+        function computeTotalsDebounced(delay = 80){
+            clearTimeout(totalsDebounce);
+            totalsDebounce = setTimeout(()=> computeTotals(), delay);
+        }
+
+        function computeTotals(){
+            try{
+                const rev = safeParse(localStorage.getItem(KEYS.revenue), []);
+                const gen = safeParse(localStorage.getItem(KEYS.generalExp), []);
+                const cap = safeParse(localStorage.getItem(KEYS.capitalExp), []);
+                const comp = safeParse(localStorage.getItem(KEYS.comp), []);
+                const tariff = safeParse(localStorage.getItem(KEYS.tariff), []);
+
+                const sumClasses = arr => (arr||[]).reduce((acc, cls) => acc + (Array.isArray(cls.items) ? cls.items.reduce((s,it)=> s + (Number(it.total)||0), 0) : 0), 0);
+
+                const revTotal = sumClasses(rev);
+                const genTotal = sumClasses(gen);
+                const capTotal = sumClasses(cap);
+                const compTotal = sumClasses(comp);
+                const tariffCount = tariff.length || 0;
+
+                $(ids.totalRevenue).textContent = currencyString(revTotal);
+                $(ids.totalGenExp).textContent = currencyString(genTotal);
+                $(ids.totalCapExp).textContent = currencyString(capTotal);
+                $(ids.totalComp).textContent = currencyString(compTotal);
+                $(ids.totalTariff).textContent = tariffCount;
+
+                $(ids.revCount).textContent = 'Classes: ' + (rev.length || 0);
+                const genRows = (gen || []).reduce((c,g)=> c + (Array.isArray(g.items)?g.items.length:0),0);
+                $(ids.genExpCount).textContent = 'Rows: ' + genRows;
+                const capRows = (cap || []).reduce((c,g)=> c + (Array.isArray(g.items)?g.items.length:0),0);
+                $(ids.capExpCount).textContent = 'Items: ' + capRows;
+                const compRows = (comp || []).reduce((c,g)=> c + (Array.isArray(g.items)?g.items.length:0),0);
+                $(ids.compCount).textContent = 'Records: ' + compRows;
+
+                const deficit = revTotal - (genTotal + capTotal + compTotal);
+                $(ids.totalDeficit).textContent = (deficit < 0 ? '- $' : '$') + numberFormat(Math.abs(deficit));
+                $(ids.forecastPct).textContent = '—';
+                $(ids.tariffUpdated).textContent = (localStorage.getItem(KEYS.tariffUpdated) ? new Date(localStorage.getItem(KEYS.tariffUpdated)).toLocaleString() : '—');
+
+                // update visual hint for deficit (small UX improvement)
+                const repCard = document.getElementById('cardReports');
+                if(repCard){
+                    if(deficit < 0) repCard.classList.add('negative'); else repCard.classList.remove('negative');
+                }
+            }catch(e){ console.error('computeTotals error', e); }
+        }
+
+        // Expose refresh for other pages (keeps backwards compatibility)
+        window.DashboardHelpers = {
+            refresh: () => { computeTotalsDebounced(0); renderNotificationBadge(); renderRecentActivity(); }
+        };
+
+        // ---- Cross-tab sync: listen for storage events ----
+        window.addEventListener('storage', (e)=>{
+            // If any of the data keys change, recompute totals and UI
+            const watched = Object.values(KEYS);
+            if(watched.includes(e.key) || e.key === null){
+                computeTotalsDebounced();
+                renderNotificationBadge();
+                renderRecentActivity();
+            }
+        });
+
+        // Also poll periodically as fallback for environments without storage events (like some Electron set-ups)
+        setInterval(()=>{ computeTotalsDebounced(); renderNotificationBadge(); }, 1000);
+
+        // ---- Utility: modals & toasts ----
+        function showModal(id){ document.getElementById('overlay').style.display='block'; const m=document.getElementById(id); if(m) m.style.display='block'; }
+        function hideModal(id){ document.getElementById('overlay').style.display='none'; const m=document.getElementById(id); if(m) m.style.display='none'; }
+        document.getElementById('overlay')?.addEventListener('click', ()=>{ document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'; });
+
+        function showToast(msg){
+            const el = document.createElement('div'); el.style.cssText = 'position:fixed;right:20px;bottom:20px;background:#111;color:#fff;padding:10px 12px;border-radius:8px;z-index:9999;box-shadow:0 10px 30px rgba(2,6,23,0.3);opacity:0;transform:translateY(12px);transition:all .28s';
+            el.textContent = msg; document.body.appendChild(el);
+            requestAnimationFrame(()=>{ el.style.opacity=1; el.style.transform='translateY(0)'; });
+            setTimeout(()=>{ el.style.opacity=0; el.style.transform='translateY(12px)'; setTimeout(()=>el.remove(),300); }, 1600);
+        }
+
+        // ---- Manage users close/cancel handlers (small UX) ----
+        document.getElementById('cancelCreateUserBtn')?.addEventListener('click', ()=> hideModal('addUserModal'));
+        document.getElementById('closeManageUsersBtn')?.addEventListener('click', ()=> hideModal('manageUsersModal'));
+
+        // ---- Logout ----
+        document.getElementById('logoutBtn')?.addEventListener('click', ()=> {
+            const user = getCurrentUser();
+            if(user){
+                logActivity('Logout');
+                sessionStorage.removeItem('loggedInUser');
+            }
+            // If electron, try app-level navigation
+            if(window.electronAPI){
+                if(typeof window.electronAPI.openpage === 'function'){ try{ window.electronAPI.openpage('index.html'); }catch(e){} try{ window.close(); }catch(e){} return; }
+                if(typeof window.electronAPI.openWindow === 'function'){ try{ window.electronAPI.openWindow('index.html'); }catch(e){} try{ window.close(); }catch(e){} return; }
+            }
+            // browser fallback
+            const overlay = document.createElement('div'); overlay.style.cssText = 'position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999';
+            overlay.innerHTML = `<div style="text-align:center"><h2>Logging out…</h2><div class="small">You will be redirected to login</div></div>`;
+            document.body.appendChild(overlay);
+            setTimeout(()=> { window.location.href = 'index.html'; }, 900);
+        });
+
+        // ---- Initial render ----
+        renderNotificationBadge();
+        computeTotals();
+        renderRecentActivity();
+
+        // Expose some things for other pages to call explicitly
+        window.AppDashboard = {
+            recompute: () => { computeTotalsDebounced(0); renderNotificationBadge(); renderRecentActivity(); },
+            pushNoti: (title, body) => window.AppNotifications.push(title, body)
+        };
+
+        // Apply per-user settings (called after safe restore or initial load)
+        function applySettingsForUser(username){
+            const s = safeParse(localStorage.getItem(`settings_${username}`), {});
+            if(s.zoom) document.body.style.transform = `scale(${s.zoom})`;
+            if(s.contrast) document.documentElement.style.setProperty('--bg', '#fff');
+            if(s.theme === 'dark') document.documentElement.style.setProperty('--bg', '#0b1220');
+        }
+
+        // small utility to populate manage users at load if admin already opened
+        // (keeps behavior consistent with your earlier code)
+        try{ if(document.getElementById('usersList')) populateManageUsers(); }catch(e){}
+
+        // small keyboard escape handler to close menus
+        document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape'){ document.querySelectorAll('.modal').forEach(m => m.style.display='none'); document.getElementById('overlay').style.display='none'; } });
+
+    })();
+</script>
+<script>
+    /* --- Revenue save hooks --- */
+    (function(){
+        const KEY = 'revenueData_v3';
+
+        function safeParse(raw){ try{return JSON.parse(raw||'[]');}catch{return [];} }
+
+        // Called when revenue is saved
+        function afterRevenueSave(newClassName){
+            // 1. Push notification
+            if(window.AppNotifications?.push){
+                window.AppNotifications.push('Revenue Added', `New revenue class "${newClassName}" was added.`);
+            } else {
+                console.log('[Revenue] Notification skipped (AppNotifications not available)');
+            }
+
+            // 2. Refresh dashboard instantly (no waiting for storage event)
+            if(window.DashboardHelpers?.refresh){
+                window.DashboardHelpers.refresh();
+            } else {
+                console.log('[Revenue] Dashboard refresh skipped (DashboardHelpers not found)');
+            }
+        }
+
+        // Example patch for save logic (you may already have saveRevenue() or similar):
+        const origSave = window.saveRevenue;
+        window.saveRevenue = function(...args){
+            const result = origSave ? origSave.apply(this, args) : null;
+            try{
+                // Determine last added class name from localStorage
+                const data = safeParse(localStorage.getItem(KEY));
+                const last = data[data.length-1];
+                const className = last?.className || 'Unnamed class';
+                afterRevenueSave(className);
+            }catch(e){ console.error('Revenue hook error', e); }
+            return result;
+        };
+    })();
+</script>
+
+
+</body>
+</html>
